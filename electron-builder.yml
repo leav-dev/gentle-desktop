@@ -59,11 +59,14 @@ nsis:
 mac:
   target:
     - dmg
+  # Same shape on every platform, so a download list reads as one project.
+  artifactName: ${name}-${version}-${arch}.${ext}
   category: public.app-category.developer-tools
 
 linux:
   target:
     - AppImage
+  artifactName: ${name}-${version}-${arch}.${ext}
   # Linux takes a PNG and nothing else. Without this line electron-builder tries to convert
   # the Windows .ico and fails with "unknown output format set", which names neither the
   # platform nor the file.
