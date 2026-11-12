@@ -69,11 +69,15 @@ export function commandKeyLabel(): string {
 
 /** Bare accelerators, for the action row where the button already carries the verb. */
 export function historyShortcut(): string {
-  return isMac() ? '⌘K' : 'Ctrl+K'
+  return isMac() ? '⌘H' : 'Ctrl+H'
 }
 
+/**
+ * Commands follow the terminal: `alt+k` opens the command menu there, and `ctrl+k` is
+ * reserved by pi's editor. The app keeps `ctrl+p` as a convenience alias.
+ */
 export function commandsShortcut(): string {
-  return isMac() ? '⌘P' : 'Ctrl+P'
+  return isMac() ? '⌥K' : 'Alt+K'
 }
 
 export function agentsShortcut(): string {
@@ -81,7 +85,7 @@ export function agentsShortcut(): string {
 }
 
 export function settingsShortcut(): string {
-  return isMac() ? '⌘,' : 'Ctrl+,'
+  return isMac() ? '⌘K' : 'Ctrl+K'
 }
 
 export function relativeTime(timestamp: string | null): string {

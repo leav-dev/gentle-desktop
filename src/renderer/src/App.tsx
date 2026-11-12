@@ -82,9 +82,10 @@ export function App(): React.JSX.Element {
       })
   }, [engine.ready])
 
-  // ⌘K / Ctrl+K opens the picker, ⌘P / Ctrl+P the command palette, Alt+A the agents
-  // overlay, ⌘, / Ctrl+, the setup window. Pressing an accelerator again closes its
-  // overlay, and overlays never stack.
+  // Ctrl+K opens the setup window, Alt+K (or Ctrl+P) the command palette, Ctrl+H the
+  // history picker and Alt+A the agents overlay. The terminal reserves Ctrl+K for its
+  // editor, which does not exist here, so Ctrl+K follows the habit users arrive with.
+  // Pressing an accelerator again closes its overlay, and overlays never stack.
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent): void => {
       const key = event.key.toLowerCase()
@@ -97,19 +98,26 @@ export function App(): React.JSX.Element {
           setPaletteOpen(false)
           setHistoryOpen(false)
           setAgentsOpen((open) => !open)
+        } else if (key === 'k') {
+          event.preventDefault()
+          setHistoryOpen(false)
+          setPaletteSeed('')
+          setPaletteOpen((open) => !open)
         }
         return
       }
 
       if (!(event.metaKey || event.ctrlKey)) return
 
-      if (key === ',') {
+      if (key === 'k' || key === ',') {
         event.preventDefault()
+        setPaletteOpen(false)
+        setHistoryOpen(false)
         setWizardOpen(true)
         return
       }
 
-      if (key === 'k') {
+      if (key === 'h') {
         event.preventDefault()
         setPaletteOpen(false)
         setHistoryOpen((open) => !open)

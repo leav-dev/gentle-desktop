@@ -69,6 +69,10 @@ and the brand petal. Dim is metadata only.
   they live on the action row, and an accelerator is never advertised twice.
   Everything the window needs to state lives here and nowhere else; nothing is repeated in
   the rail or the prompt rule.
+- **Key map** — `Ctrl+K`/`⌘K` settings, `Alt+K`/`⌥K` commands, `Ctrl+H`/`⌘H` history,
+  `Alt+A`/`⌥A` agents, `Ctrl+P`/`⌘P` kept as an alias for commands. Commands follow the
+  terminal, which opens its command menu with `alt+k` because pi reserves `ctrl+k` for the
+  editor; this app has no such editor, so `ctrl+k` follows the habit users arrive with.
 - **Action row** — a labelled button row directly under the top bar for every overlay and
   session action: New, History, Commands, Agents, Providers, and Show rail when it is
   folded. Each button carries its accelerator in dim text beside the label. This row is not
