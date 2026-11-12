@@ -10,6 +10,7 @@ import {
   contextGauge,
   effortLabel,
   formatCost,
+  gentleShortcut,
   historyShortcut,
   modelLabel,
   modelRef,
@@ -52,6 +53,7 @@ export function Header({
   railCollapsed,
   onNewSession,
   onOpenCommands,
+  onOpenGentle,
   onOpenAgents,
   onToggleRail,
   onOpenSetup,
@@ -67,6 +69,7 @@ export function Header({
   railCollapsed: boolean
   onNewSession: () => void
   onOpenCommands: () => void
+  onOpenGentle: () => void
   onOpenAgents: () => void
   onToggleRail: () => void
   onOpenSetup: () => void
@@ -93,6 +96,7 @@ export function Header({
   const actions: Array<{ key: string; label: string; shortcut: string | null; onClick: () => void }> = [
     { key: 'new', label: 'New', shortcut: null, onClick: onNewSession },
     { key: 'history', label: 'History', shortcut: historyShortcut(), onClick: onOpenHistory },
+    { key: 'gentle', label: 'Gentle', shortcut: gentleShortcut(), onClick: onOpenGentle },
     { key: 'commands', label: 'Commands', shortcut: commandsShortcut(), onClick: onOpenCommands },
     { key: 'agents', label: 'Agents', shortcut: agentsShortcut(), onClick: onOpenAgents },
     { key: 'providers', label: 'Providers', shortcut: settingsShortcut(), onClick: onOpenSetup },

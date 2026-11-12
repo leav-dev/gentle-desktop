@@ -80,6 +80,15 @@ export function commandsShortcut(): string {
   return isMac() ? '⌘K' : 'Ctrl+K'
 }
 
+/**
+ * Alt+K opens the Gentle window — the settings hub — not the command palette. The palette
+ * keeps Ctrl+K and Ctrl+P, so the engine's own command list is still one keystroke away for
+ * whoever knows what they are looking for.
+ */
+export function gentleShortcut(): string {
+  return isMac() ? '⌥K' : 'Alt+K'
+}
+
 export function agentsShortcut(): string {
   return isMac() ? '⌥A' : 'Alt+A'
 }

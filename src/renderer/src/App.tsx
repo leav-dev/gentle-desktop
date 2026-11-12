@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CommandPalette } from './components/CommandPalette.tsx'
 import { AgentsView } from './components/AgentsView.tsx'
 import { DialogHost } from './components/DialogHost.tsx'
+import { GentleView } from './components/GentleView.tsx'
 import { Header } from './components/Header.tsx'
 import { NoticeToast } from './components/NoticeToast.tsx'
 import { HistoryPicker } from './components/HistoryPicker.tsx'
@@ -57,6 +58,7 @@ export function App(): React.JSX.Element {
 
   // The history picker (S12), the command palette (S13) and the folded rail (S11)
   // are overlays, not layout. The seed is the draft the `/` trigger hands over.
+  const [gentleOpen, setGentleOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [paletteSeed, setPaletteSeed] = useState('')
@@ -82,8 +84,9 @@ export function App(): React.JSX.Element {
       })
   }, [engine.ready])
 
-  // Ctrl+K opens the setup window, Alt+K (or Ctrl+P) the command palette, Ctrl+H the
-  // history picker and Alt+A the agents overlay. The terminal reserves Ctrl+K for its
+  // Alt+K opens the Gentle window: the settings hub, not the engine's command list.
+  // Ctrl+K (or Ctrl+P) keeps the command palette for whoever knows the command they want,
+  // Ctrl+H opens history and Alt+A the agents overlay. The terminal reserves Ctrl+K for its
   // editor, which does not exist here, so Ctrl+K follows the habit users arrive with.
   // Pressing an accelerator again closes its overlay, and overlays never stack.
   useEffect(() => {
@@ -97,12 +100,14 @@ export function App(): React.JSX.Element {
           event.preventDefault()
           setPaletteOpen(false)
           setHistoryOpen(false)
+          setGentleOpen(false)
           setAgentsOpen((open) => !open)
         } else if (key === 'k') {
           event.preventDefault()
+          setPaletteOpen(false)
           setHistoryOpen(false)
-          setPaletteSeed('')
-          setPaletteOpen((open) => !open)
+          setAgentsOpen(false)
+          setGentleOpen((open) => !open)
         }
         return
       }
@@ -113,6 +118,7 @@ export function App(): React.JSX.Element {
         event.preventDefault()
         setHistoryOpen(false)
         setWizardOpen(false)
+        setGentleOpen(false)
         setPaletteSeed('')
         setPaletteOpen((open) => !open)
         return
@@ -152,12 +158,17 @@ export function App(): React.JSX.Element {
   }, [])
 
   const openWizard = useCallback(() => {
+    setGentleOpen(false)
     setWizardOpen(true)
   }, [])
 
-  const openHistory = useCallback(() => setHistoryOpen(true), [])
+  const openHistory = useCallback(() => {
+    setGentleOpen(false)
+    setHistoryOpen(true)
+  }, [])
 
   const openPalette = useCallback(() => {
+    setGentleOpen(false)
     setHistoryOpen(false)
     setPaletteSeed('')
     setPaletteOpen(true)
@@ -201,6 +212,7 @@ export function App(): React.JSX.Element {
         railCollapsed={!railWide}
         onNewSession={engine.newSession}
         onOpenCommands={openPalette}
+        onOpenGentle={() => setGentleOpen((open) => !open)}
         onOpenAgents={() => setAgentsOpen((open) => !open)}
         onToggleRail={() => setRailOverlayOpen((open) => !open)}
         onOpenSetup={openWizard}
@@ -250,6 +262,15 @@ export function App(): React.JSX.Element {
       <DialogHost dialogs={engine.dialogs} onAnswer={engine.answerDialog} />
       {historyOpen ? (
         <HistoryPicker currentPath={engine.sessionPath} onSwitch={switchSession} onClose={closeHistory} />
+      ) : null}
+      {gentleOpen ? (
+        <GentleView
+          onClose={() => setGentleOpen(false)}
+          onRunCommand={runCommand}
+          onOpenSubagents={() => setAgentsOpen(true)}
+          onOpenProviders={openWizard}
+          onOpenCommands={openPalette}
+        />
       ) : null}
       {paletteOpen ? (
         <CommandPalette initialQuery={paletteSeed} onClose={closePalette} onRun={runCommand} />
