@@ -7,3 +7,5 @@ release/
 .env
 .env.local
 release-nsis/
+# experimental output directories: never meant to be committed
+release-*/

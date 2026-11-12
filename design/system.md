@@ -91,11 +91,17 @@ each attempt reinvented the styling.
   they live on the action row, and an accelerator is never advertised twice.
   Everything the window needs to state lives here and nowhere else; nothing is repeated in
   the rail or the prompt rule.
-- **Key map** — `Ctrl+K`/`⌘K` commands, `Ctrl+H`/`⌘H` history, `Alt+A`/`⌥A` agents,
-  `Ctrl+,`/`⌘,` providers. `Alt+K` and `Ctrl+P` stay as aliases for commands.
-- **There is no settings window.** Configuration *is* the command surface: the terminal's
-  command menu groups Configuration, Session, Diagnostics and Skills, and every one of those
-  is an engine command. A separate settings dialog would fork a surface the engine already
+- **Key map** — `Alt+K`/`⌥K` Gentle (settings), `Ctrl+K`/`⌘K` commands, `Ctrl+H`/`⌘H`
+  history, `Alt+A`/`⌥A` agents, `Ctrl+,`/`⌘,` providers. `Ctrl+P` stays as an alias for
+  commands. Every one of these is also a labelled row on the action row: no action exists
+  only behind a shortcut.
+- **There is no settings *form*.** The Gentle window is an index, not a second implementation:
+  each row routes to the surface that already owns the setting — an engine command, the
+  agents window, the providers window — and it never re-implements one. A row appears only
+  when its target exists, so the window cannot offer a dead end.
+- **Configuration is the command surface.** The terminal's command menu groups Configuration,
+  Session, Diagnostics and Skills, and every one of those is an engine command. A separate
+  settings dialog would fork a surface the engine already
   owns, so the palette is where configuration lives.
 - **Action row** — a labelled button row directly under the top bar for every overlay and
   session action: New, History, Commands, Agents, Providers, and Show rail when it is
