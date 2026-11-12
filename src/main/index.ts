@@ -87,6 +87,8 @@ function registerIpc(instance: PiHost): void {
 
   ipcMain.handle(IPC.sessionStats, async () => instance.sessionStats())
 
+  ipcMain.handle(IPC.sessionCommands, async () => instance.commands())
+
   ipcMain.handle(IPC.repoStatus, async () => {
     const cwd = instance.status().cwd
     // Without a session directory there is nothing to diff; the rail stays empty.

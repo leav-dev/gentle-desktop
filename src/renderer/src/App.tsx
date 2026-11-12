@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { CommandPalette } from './components/CommandPalette.tsx'
 import { DialogHost } from './components/DialogHost.tsx'
 import { Header } from './components/Header.tsx'
+import { NoticeToast } from './components/NoticeToast.tsx'
 import { HistoryPicker } from './components/HistoryPicker.tsx'
 import { PromptPanel } from './components/PromptPanel.tsx'
 import { Rail } from './components/Rail.tsx'
 import { SetupWizard } from './components/SetupWizard.tsx'
-import { StatusBar } from './components/StatusBar.tsx'
 import { Transcript } from './components/Transcript.tsx'
 import { useEngine } from './state/useEngine.ts'
 
@@ -52,8 +53,11 @@ export function App(): React.JSX.Element {
   const autoOpenDone = useRef(false)
   const dismissedThisSession = useRef(false)
 
-  // The history picker (S12) and the folded rail (S11) are overlays, not layout.
+  // The history picker (S12), the command palette (S13) and the folded rail (S11)
+  // are overlays, not layout. The seed is the draft the `/` trigger hands over.
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [paletteSeed, setPaletteSeed] = useState('')
   const [railOverlayOpen, setRailOverlayOpen] = useState(false)
 
   const bodyRef = useRef<HTMLDivElement | null>(null)
@@ -71,17 +75,26 @@ export function App(): React.JSX.Element {
         }
       })
       .catch(() => {
-        // A failed readiness check must not block the app; the status-bar entry
+        // A failed readiness check must not block the app; the header affordance
         // still opens the window manually.
       })
   }, [engine.ready])
 
-  // ⌘K / Ctrl+K opens the picker from anywhere; pressing it again closes it.
+  // ⌘K / Ctrl+K opens the picker, ⌘P / Ctrl+P the command palette; pressing an
+  // accelerator again closes its overlay, and the two never stack.
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      if (!(event.metaKey || event.ctrlKey)) return
+      const key = event.key.toLowerCase()
+      if (key === 'k') {
         event.preventDefault()
+        setPaletteOpen(false)
         setHistoryOpen((open) => !open)
+      } else if (key === 'p') {
+        event.preventDefault()
+        setHistoryOpen(false)
+        setPaletteSeed('')
+        setPaletteOpen((open) => !open)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -104,6 +117,24 @@ export function App(): React.JSX.Element {
 
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const closeHistory = useCallback(() => setHistoryOpen(false), [])
+  const closePalette = useCallback(() => setPaletteOpen(false), [])
+
+  // The `/` trigger: the prompt hands its draft over and stays empty, so the text
+  // the user typed continues in the palette's filter, never in the message.
+  const openPaletteFromSlash = useCallback((draft: string) => {
+    setHistoryOpen(false)
+    setPaletteSeed(draft)
+    setPaletteOpen(true)
+  }, [])
+
+  // Running a command goes through the ordinary prompt path, so the turn starts
+  // exactly as if the user had typed `/<name>` themselves.
+  const runCommand = useCallback(
+    (command: string) => {
+      engine.send(command)
+    },
+    [engine]
+  )
 
   const switchSession = useCallback(
     (sessionPath: string) => {
@@ -119,17 +150,24 @@ export function App(): React.JSX.Element {
         model={engine.model}
         thinkingLevel={engine.thinkingLevel}
         stats={engine.stats}
+        repo={engine.repo}
+        railCollapsed={!railWide}
+        onToggleRail={() => setRailOverlayOpen((open) => !open)}
+        onOpenSetup={openWizard}
         onOpenHistory={openHistory}
       />
       <div className={`app-body${railWide ? '' : ' app-body-rail-hidden'}`} ref={bodyRef}>
         <section className="app-conversation">
           <Transcript items={engine.transcript.items} />
+          <NoticeToast notice={engine.notice} onDismiss={engine.dismissNotice} />
           <PromptPanel
             disabled={!engine.ready}
             streaming={engine.streaming}
             mode={engine.permissionMode}
+            statusText={engine.statusText}
             onSend={engine.send}
             onAbort={engine.abort}
+            onSlashTrigger={openPaletteFromSlash}
           />
         </section>
         {railWide ? (
@@ -145,21 +183,12 @@ export function App(): React.JSX.Element {
           </div>
         ) : null}
       </div>
-      <StatusBar
-        status={engine.status}
-        model={engine.model}
-        thinkingLevel={engine.thinkingLevel}
-        repo={engine.repo}
-        tasks={engine.oddTasks}
-        activity={engine.activity}
-        notice={engine.notice}
-        railCollapsed={!railWide}
-        onToggleRail={() => setRailOverlayOpen((open) => !open)}
-        onOpenSetup={openWizard}
-      />
       <DialogHost dialogs={engine.dialogs} onAnswer={engine.answerDialog} />
       {historyOpen ? (
         <HistoryPicker currentPath={engine.sessionPath} onSwitch={switchSession} onClose={closeHistory} />
+      ) : null}
+      {paletteOpen ? (
+        <CommandPalette initialQuery={paletteSeed} onClose={closePalette} onRun={runCommand} />
       ) : null}
       {wizardOpen ? <SetupWizard onClose={closeWizard} /> : null}
     </div>

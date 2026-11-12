@@ -36,7 +36,7 @@
         font-size: 13px;
         line-height: 1.4;
         display: grid;
-        grid-template-rows: auto 1fr auto;
+        grid-template-rows: auto 1fr;
         height: 100vh;
         overflow: hidden;
       }
@@ -55,6 +55,10 @@
       header .right { margin-left: auto; display: flex; gap: 12px; color: var(--dim); }
       header .right b { color: var(--powder-blue); font-weight: 500; }
       header .right .model { color: var(--powder-blue); }
+      header .branch { color: var(--text); }
+      header .branch .dirty { color: var(--warning); }
+      /* The context gauge keeps the terminal's cell look: filled and empty blocks. */
+      .gauge { color: var(--accent); letter-spacing: 0.14em; }
       header .right .cost { color: var(--text); font-variant-numeric: tabular-nums; }
       .picker-key {
         border: 1px solid var(--border-subtle);
@@ -188,23 +192,6 @@
       .rail .fold { padding-left: 20px; color: var(--dim); font-size: 12px; }
       .rail .clean { color: var(--muted); }
 
-      /* --- status ------------------------------------------------------- */
-      footer {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        padding: 6px 16px;
-        border-top: 1px solid var(--border-subtle);
-        color: var(--muted);
-        font-size: 12px;
-        flex-wrap: wrap;
-      }
-      footer b { color: var(--text); font-weight: 600; }
-      .sep { color: var(--border); }
-      .badge { color: var(--warning); font-weight: 700; letter-spacing: 0.04em; }
-      .gauge { color: var(--accent); letter-spacing: 0.14em; }
-      .grow { flex: 1; }
-      footer .hint { color: var(--dim); }
       :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
     </style>
   </head>
@@ -212,6 +199,7 @@
     <header>
       <span class="brand">✿ <b>gentle desktop</b></span>
       <span class="path">~/codes/priv/gentle_ia_desktop</span>
+      <span class="branch">main <span class="dirty">±3</span></span>
       <span class="right">
         <span class="picker-key">⌘K history</span>
         <span class="model">deepseek-v4-flash · medium</span>
@@ -281,7 +269,7 @@
 
         <section>
           <h2><b>▾ HELPERS</b><span class="count">1 running · 1 waiting</span></h2>
-          <p><span class="task"><span class="run">◐</span> map footer data sources</span><span class="meta">explore · 12.4k</span></p>
+          <p><span class="task"><span class="run">◐</span> map transcript data sources</span><span class="meta">explore · 12.4k</span></p>
           <p><span class="task"><span class="warn">?</span> approve: write styles.css</span><span class="meta">needs you</span></p>
         </section>
 
@@ -293,14 +281,5 @@
       </aside>
     </main>
 
-    <footer>
-      <b>main</b><span class="warn">±3</span>
-      <span class="sep">│</span>
-      <span><b>deepseek-v4-flash</b> · medium</span>
-      <span class="sep">│</span>
-      <span>2 tasks · 1 helper</span>
-      <span class="grow"></span>
-      <span class="hint">⌥⌘P fold rail · ⌘K history</span>
-    </footer>
   </body>
 </html>

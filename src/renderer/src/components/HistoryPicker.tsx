@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SessionSummary } from '../../../shared/ipc.ts'
+import { FloatingWindow } from './FloatingWindow.tsx'
 import { relativeTime } from '../state/format.ts'
 
 function rowLabel(session: SessionSummary): string {
@@ -13,7 +14,8 @@ function rowLabel(session: SessionSummary): string {
  * The history picker (gentle-desktop S12): there is no permanent conversation
  * list. Saved conversations are reached through this overlay, opened on demand
  * with ⌘K / Ctrl+K or the header affordance, and navigated with the keyboard:
- * ↑ ↓ move, ⏎ opens, esc closes.
+ * ↑ ↓ move, ⏎ opens, esc closes. It renders inside the shared floating-window
+ * chrome, which owns the frame, the Escape key and the focus trap.
  */
 export function HistoryPicker({
   currentPath,
@@ -60,12 +62,9 @@ export function HistoryPicker({
   )
 
   useEffect(() => {
+    // Escape and the focus trap belong to the floating chrome; only the list
+    // navigation lives here.
     const onKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        onClose()
-        return
-      }
       if (event.key === 'ArrowDown') {
         event.preventDefault()
         setIndex((current) => Math.min(current + 1, Math.max(sessions.length - 1, 0)))
@@ -89,49 +88,41 @@ export function HistoryPicker({
   }, [sessions, index, choose, onClose])
 
   return (
-    <div className="picker-overlay" onClick={onClose}>
-      <div
-        className="picker-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Conversation history"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="picker-head">
-          <span className="petal">✿</span>
-          <b>history</b>
-          <span className="picker-hint">↑ ↓ choose · ⏎ open · esc close</span>
-        </div>
-        {failed ? <p className="picker-empty">Could not read the conversation history.</p> : null}
-        {!failed && sessions.length === 0 ? <p className="picker-empty">No saved conversations yet.</p> : null}
-        {!failed && sessions.length > 0 ? (
-          <ul className="picker-list" role="listbox" aria-label="Saved conversations">
-            {sessions.map((session, position) => (
-              <li key={session.path}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={position === index}
-                  className={`picker-row${position === index ? ' picker-row-active' : ''}`}
-                  ref={position === index ? activeRowRef : undefined}
-                  onClick={() => choose(session)}
-                  onMouseEnter={() => setIndex(position)}
-                  title={session.cwd ?? undefined}
-                >
-                  <span className="picker-row-label">
-                    {session.path === currentPath ? '▸ ' : ''}
-                    {rowLabel(session)}
-                  </span>
-                  <span className="picker-row-meta">
-                    {relativeTime(session.timestamp)}
-                    {session.messageCount > 0 ? ` · ${session.messageCount} messages` : ''}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    </div>
+    <FloatingWindow
+      title="history"
+      hint="↑ ↓ choose · ⏎ open · esc close"
+      className="floating-panel-picker"
+      onClose={onClose}
+    >
+      {failed ? <p className="picker-empty">Could not read the conversation history.</p> : null}
+      {!failed && sessions.length === 0 ? <p className="picker-empty">No saved conversations yet.</p> : null}
+      {!failed && sessions.length > 0 ? (
+        <ul className="picker-list" role="listbox" aria-label="Saved conversations">
+          {sessions.map((session, position) => (
+            <li key={session.path}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={position === index}
+                className={`picker-row${position === index ? ' picker-row-active' : ''}`}
+                ref={position === index ? activeRowRef : undefined}
+                onClick={() => choose(session)}
+                onMouseEnter={() => setIndex(position)}
+                title={session.cwd ?? undefined}
+              >
+                <span className="picker-row-label">
+                  {session.path === currentPath ? '▸ ' : ''}
+                  {rowLabel(session)}
+                </span>
+                <span className="picker-row-meta">
+                  {relativeTime(session.timestamp)}
+                  {session.messageCount > 0 ? ` · ${session.messageCount} messages` : ''}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </FloatingWindow>
   )
 }

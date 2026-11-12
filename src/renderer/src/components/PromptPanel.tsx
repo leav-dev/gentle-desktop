@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import type { AgentPermissionMode } from '../../../shared/ipc.ts'
-import { historyKeyLabel } from '../state/format.ts'
+import { commandKeyLabel, historyKeyLabel } from '../state/format.ts'
+import { shouldOpenPalette } from '../state/commandFilter.ts'
 
 /**
  * The petal prompt panel — the only place the ✿ appears. A rule above the field
@@ -9,8 +10,7 @@ import { historyKeyLabel } from '../state/format.ts'
  * and the field stays disabled while the engine is not ready. Never a boxed
  * chat input with a send button as the primary affordance — the keyboard
  * contract leads; the small button only serves mouse users.
- */
-const MODE_LABELS: Record<AgentPermissionMode, string | null> = {
+ */const MODE_LABELS: Record<AgentPermissionMode, string | null> = {
   normal: null,
   auto: null,
   yolo: '🔥 YOLO',
@@ -21,15 +21,25 @@ export function PromptPanel({
   disabled,
   streaming,
   mode,
+  statusText,
   onSend,
-  onAbort
+  onAbort,
+  onSlashTrigger
 }: {
   disabled: boolean
   streaming: boolean
   /** The agent's permission mode; only the unguarded ones are worth surfacing. */
   mode: AgentPermissionMode
+  /** The latest extension status line, when one is active. */
+  statusText: string | null
   onSend: (message: string) => void
   onAbort: () => void
+  /**
+   * Fires when the first character typed into an empty prompt is `/`: the palette
+   * takes the draft over and the prompt stays empty, so a slash can never end up
+   * both in the palette filter and in the message.
+   */
+  onSlashTrigger?: (draft: string) => void
 }): React.JSX.Element {
   const [draft, setDraft] = useState('')
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -38,6 +48,16 @@ export function PromptPanel({
 
   const stateLabel = disabled ? 'waiting for the engine' : streaming ? 'working…' : 'waiting for input'
   const modeLabel = MODE_LABELS[mode]
+
+  function handleChange(event: React.ChangeEvent<HTMLTextAreaElement>): void {
+    const next = event.target.value
+    // The trigger rule is pure and pinned in tests/commandFilter.test.mts.
+    if (onSlashTrigger !== undefined && shouldOpenPalette(draft, next)) {
+      onSlashTrigger(next)
+      return
+    }
+    setDraft(next)
+  }
 
   function submit(): void {
     if (!canSend) return
@@ -71,6 +91,7 @@ export function PromptPanel({
         <span className="petal">✿</span>
         <span>{stateLabel}</span>
         {modeLabel ? <span className="mode-badge">{modeLabel}</span> : null}
+        {statusText !== null ? <span className="prompt-status">{statusText}</span> : null}
         <span className="prompt-rule-right">{streaming ? 'esc · stop' : historyKeyLabel()}</span>
       </div>
       <div className="prompt-input">
@@ -84,7 +105,7 @@ export function PromptPanel({
           value={draft}
           disabled={disabled}
           aria-label="Message the agent"
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
         <button
@@ -96,7 +117,9 @@ export function PromptPanel({
           {streaming ? 'stop' : 'send'}
         </button>
       </div>
-      <div className="prompt-hint">⏎ send · ⇧⏎ newline{streaming ? ' · esc stop' : ''}</div>
+      <div className="prompt-hint">
+        {commandKeyLabel()} · ⏎ send · ⇧⏎ newline{streaming ? ' · esc stop' : ''}
+      </div>
     </div>
   )
 }

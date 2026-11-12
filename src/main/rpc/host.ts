@@ -1,5 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import type { EngineModelRef, HostStatus, SessionStats } from '../../shared/ipc.ts'
+import type { CommandChoice, EngineModelRef, HostStatus, SessionStats } from '../../shared/ipc.ts'
 import type {
   DialogRequest,
   ExtensionUiRequest,
@@ -41,6 +41,8 @@ export class PiHost {
   #restartTimer: NodeJS.Timeout | null = null
   #stderrTail = ''
   #streaming = false
+  /** Commands cached for the lifetime of the current engine child; null means uncached. */
+  #commands: CommandChoice[] | null = null
   readonly #pendingDialogs = new Map<string, DialogRequest>()
 
   constructor(listener: PiHostListener) {
@@ -164,6 +166,39 @@ export class PiHost {
     return payload ?? null
   }
 
+  /**
+   * Commands the engine exposes (`get_commands`), cached for the lifetime of the
+   * engine child and re-fetched after a restart or crash. Extensions register their
+   * commands at load time, so the list cannot go stale mid-child. A failed call
+   * returns an empty list rather than throwing into the UI; only a successful fetch
+   * is cached, so a later retry can still succeed.
+   */
+  async commands(): Promise<CommandChoice[]> {
+    const cached = this.#commands
+    if (cached !== null) return cached
+
+    try {
+      const payload = await this.#require().request<{ commands?: unknown }>({ type: 'get_commands' })
+      const list = Array.isArray(payload?.commands) ? payload.commands : []
+
+      const parsed: CommandChoice[] = []
+      for (const raw of list) {
+        if (typeof raw !== 'object' || raw === null) continue
+        const command = raw as { name?: unknown; description?: unknown; source?: unknown }
+        if (typeof command.name !== 'string') continue
+        parsed.push({
+          name: command.name,
+          ...(typeof command.description === 'string' ? { description: command.description } : {}),
+          ...(typeof command.source === 'string' ? { source: command.source } : {})
+        })
+      }
+      this.#commands = parsed
+      return parsed
+    } catch {
+      return []
+    }
+  }
+
   answerDialog(response: ExtensionUiResponse): void {
     const transport = this.#require()
     this.#pendingDialogs.delete(response.id)
@@ -238,6 +273,8 @@ export class PiHost {
     })
 
     this.#transport = transport
+    // A new child means a new command set: drop whatever the previous one reported.
+    this.#commands = null
     // The first successful command proves the child speaks the protocol.
     void this.#handshake()
   }
@@ -269,6 +306,7 @@ export class PiHost {
   #handleExit(info: { code: number | null; signal: NodeJS.Signals | null }): void {
     this.#transport = null
     this.#streaming = false
+    this.#commands = null
     this.#cancelAllDialogs()
 
     if (this.#stopping) {

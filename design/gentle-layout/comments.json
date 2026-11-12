@@ -41,9 +41,9 @@
       "excerpt": "main ±3 │ deepseek-v4-flash · medium │ 2 tasks · 1 helper ⌥⌘P fold rail · ⌘K history",
       "comment": "la rama en la que esta abajando va en  la barra superior, el resto es inecesario ya que en otras partes del layout se muestra",
       "createdAt": "2026-11-12T02:38:27.242Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-12T02:38:27.300Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-12T02:41:45.064Z"
     }
   ]
 }

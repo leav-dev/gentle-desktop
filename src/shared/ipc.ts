@@ -26,6 +26,7 @@ export const IPC = {
   sessionMessages: 'session:get-messages',
   sessionSetModel: 'session:set-model',
   sessionStats: 'session:stats',
+  sessionCommands: 'session:commands',
   sessionsList: 'sessions:list',
   sessionsSwitch: 'sessions:switch',
   repoStatus: 'repo:status',
@@ -130,6 +131,17 @@ export interface EngineModelRef {
 }
 
 /**
+ * One command the engine exposes over `get_commands`, as the palette lists it.
+ * The engine omits `description` for some commands and annotates where a command
+ * comes from, so both stay optional and are filled only when actually present.
+ */
+export interface CommandChoice {
+  name: string
+  description?: string
+  source?: string
+}
+
+/**
  * A provider the setup window can offer, and how it can be registered.
  *
  * `ready` is what matters to a user: it means the engine already reports models for this
@@ -195,6 +207,7 @@ export interface GentleApi {
     messages: () => Promise<unknown[]>
     setModel: (provider: string, modelId: string) => Promise<void>
     stats: () => Promise<SessionStats | null>
+    commands: () => Promise<CommandChoice[]>
     answerDialog: (response: ExtensionUiResponse) => void
   }
   /** Session-directory data the engine does not expose over RPC. */

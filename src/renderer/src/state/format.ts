@@ -52,6 +52,11 @@ export function historyKeyLabel(): string {
   return isMac() ? '⌘K history' : 'Ctrl+K history'
 }
 
+/** The command palette's accelerator, named for the running platform. */
+export function commandKeyLabel(): string {
+  return isMac() ? '⌘P commands' : 'Ctrl+P commands'
+}
+
 export function relativeTime(timestamp: string | null): string {
   if (!timestamp) return ''
   const parsed = Date.parse(timestamp)

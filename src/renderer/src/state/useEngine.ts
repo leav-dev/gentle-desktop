@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import type { DialogRequest, ExtensionUiRequest, RpcEvent, SessionState } from '../../../shared/protocol.ts'
 import type {
   AgentPermissionMode,
@@ -37,6 +37,13 @@ function transcriptReducer(state: TranscriptState, action: TranscriptAction): Tr
   }
 }
 
+/** One extension notification, rendered as a toast by the shell. */
+export interface AgentNotice {
+  id: number
+  message: string
+  tone: 'info' | 'warning' | 'error'
+}
+
 export interface EngineView {
   status: HostStatus
   ready: boolean
@@ -58,10 +65,14 @@ export interface EngineView {
   /** Dialog queue in arrival order; only the first is presented at a time. */
   dialogs: DialogRequest[]
   activeDialog: DialogRequest | null
-  notice: ExtensionUiRequest | null
   /** The agent's permission mode; only unguarded modes are surfaced in the prompt. */
   permissionMode: AgentPermissionMode
+  /** The latest extension notification, rendered as a toast. */
+  notice: AgentNotice | null
+  /** The latest extension status line, shown beside the prompt rule. */
+  statusText: string | null
   send: (message: string) => void
+  dismissNotice: () => void
   switchSession: (sessionPath: string) => void
   abort: () => void
   newSession: () => void
@@ -78,12 +89,14 @@ export function useEngine(): EngineView {
   const [transcript, dispatch] = useReducer(transcriptReducer, undefined, initialTranscriptState)
   const [sessionState, setSessionState] = useState<SessionState | null>(null)
   const [dialogs, setDialogs] = useState<DialogRequest[]>([])
-  const [notice, setNotice] = useState<ExtensionUiRequest | null>(null)
   const [permissionMode, setPermissionMode] = useState<AgentPermissionMode>('normal')
   const [activity, setActivity] = useState<AgentActivity>(emptyAgentActivity)
   const [oddTasks, setOddTasks] = useState<OddTaskFeature[]>([])
   const [repo, setRepo] = useState<RepoStatus | null>(null)
   const [stats, setStats] = useState<SessionStats | null>(null)
+  const [notice, setNotice] = useState<AgentNotice | null>(null)
+  const [statusText, setStatusText] = useState<string | null>(null)
+  const notifySeq = useRef(0)
 
   const refreshShellData = useCallback((): void => {
     // The engine is not the source of these, so a rejected call keeps the last
@@ -110,11 +123,20 @@ export function useEngine(): EngineView {
     const offDialog = gentle.host.onDialog((request: DialogRequest) => {
       setDialogs((prev) => [...prev, request])
     })
-    // Only user-visible notices reach the status bar; widget pushes feed the Helpers rail.
+    // Widget pushes feed the Helpers rail, `notify` becomes a toast and `setStatus` a quiet
+    // segment on the prompt rule: with no status bar, an ignored notice would be a lost signal.
     const offNotice = gentle.host.onNotice((request: ExtensionUiRequest) => {
-      if (request.method === 'setStatus' || request.method === 'notify') setNotice(request)
-      else if (request.method === 'setWidget' && request.widgetKey === ACTIVITY_WIDGET_KEY) {
+      if (request.method === 'setWidget' && request.widgetKey === ACTIVITY_WIDGET_KEY) {
         setActivity(parseAgentActivity(request.widgetLines?.[0] ?? null))
+      } else if (request.method === 'notify') {
+        notifySeq.current += 1
+        setNotice({
+          id: notifySeq.current,
+          message: request.message,
+          tone: request.notifyType ?? 'info'
+        })
+      } else if (request.method === 'setStatus') {
+        setStatusText(request.statusText ?? null)
       }
     })
 
@@ -149,13 +171,15 @@ export function useEngine(): EngineView {
     dispatch({ kind: 'user', text: message })
     // `prompt` resolves on acceptance; the turn itself streams in as events.
     void window.gentle.session.prompt(message).catch(() => {
-      // The status bar already reflects a dead engine; nothing else to surface here.
+      // A dead engine shows up as a disabled prompt panel; nothing else to surface here.
     })
   }, [])
 
   const abort = useCallback(() => {
     void window.gentle.session.abort().catch(() => {})
   }, [])
+
+  const dismissNotice = useCallback(() => setNotice(null), [])
 
   const loadHistory = useCallback(() => {
     void window.gentle.session
@@ -207,6 +231,9 @@ export function useEngine(): EngineView {
     streaming: transcript.isStreaming,
     transcript,
     permissionMode,
+    notice,
+    statusText,
+    dismissNotice,
     sessionName: sessionState?.sessionName ?? null,
     sessionPath: sessionState?.sessionFile ?? null,
     model: sessionState?.model,
@@ -217,7 +244,6 @@ export function useEngine(): EngineView {
     stats,
     dialogs,
     activeDialog: dialogs.length > 0 ? (dialogs[0] ?? null) : null,
-    notice,
     send,
     abort,
     newSession,

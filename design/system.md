@@ -63,11 +63,13 @@ and the brand petal. Dim is metadata only.
 - **Agent permission mode** (`🔥 YOLO`, `💥 SUPER-YOLO`) sits on the prompt rule immediately
   after the agent state, because it describes how the agent will act on the next turn. It is
   never a status-bar segment, and it is absent in the default guarded mode.
-- **Top bar** — brand, working directory, and on the right: the history affordance, model
-  with effort, context usage gauge with percent, and cost. Context usage and cost live here
-  and nowhere else; they are never repeated in the rail or the status bar.
-- **Status bar** — one row, segments separated by `│`: branch with `±N`, mode badge, model
-  and effort, work counts, hints. Segments drop from the right when space runs out.
+- **Top bar** — brand, working directory, branch with `±N`, and on the right: the history
+  affordance, model with effort, context usage gauge with percent, and cost. Everything the
+  window needs to state lives here and nowhere else; nothing is repeated in the rail or the
+  prompt rule.
+- **There is no status bar.** Every value it used to repeat already has an owner: branch,
+  model, context and cost in the top bar, work counts in the rail, and hints on the prompt
+  rule. A second row restating them is noise, not information.
 - **Rail sections** — `▾ NAME` + count. The set is predefined and the order is fixed:
   Tasks → Jobs → Helpers → Session. Section headers are not buttons; the whole section is
   scannable.

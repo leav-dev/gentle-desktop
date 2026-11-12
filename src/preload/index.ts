@@ -6,6 +6,7 @@ import {
   type AuthLoginRequest,
   type AuthLoginResult,
   type AuthPromptRequest,
+  type CommandChoice,
   type GentleApi,
   type HostStatus,
   type OddTaskFeature,
@@ -76,6 +77,7 @@ const api: GentleApi = {
     setModel: (provider: string, modelId: string) =>
       ipcRenderer.invoke(IPC.sessionSetModel, { provider, modelId }) as Promise<void>,
     stats: () => ipcRenderer.invoke(IPC.sessionStats) as Promise<SessionStats | null>,
+    commands: () => ipcRenderer.invoke(IPC.sessionCommands) as Promise<CommandChoice[]>,
     answerDialog: (response: ExtensionUiResponse) => {
       ipcRenderer.send(IPC.dialogAnswer, response)
     }
