@@ -101,12 +101,15 @@ T19. [x] Rebuild the window shell as the terminal layout: header row, transcript
     prompt panel and the status bar, in the Gentleman-Cute palette. Done in d3faf02. — S11
 T20. [x] Replace the session sidebar with a history picker opened on demand. Done in
     d3faf02. — S12
-T26. Command palette: list the engine's commands over `get_commands`, filter by typing,
+T26. [x] Command palette: list the engine's commands over `get_commands`, filter by typing,
     navigate with the keyboard, and run the chosen one through `prompt "/<name>"`, with the
-    palette closing and the turn starting as if it had been typed. — S13
-T27. Floating window chrome: one shared overlay component with the terminal's frame, tone
+    palette closing and the turn starting as if it had been typed. Done in 035c4b8. — S13
+T27. [x] Floating window chrome: one shared overlay component with the terminal's frame, tone
     variants and hint slot, adopted by the command palette, the history picker and the
-    dialog host so every floating surface looks and behaves the same. — S14
+    dialog host so every floating surface looks and behaves the same. Done in 035c4b8. — S14
+T28. [x] Close the gaps that removing the status bar opened: extension notifications become
+    a toast, extension status lines sit beside the prompt rule, and the engine phase stays
+    visible in the top bar. Done in 035c4b8. — S11, S14
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
