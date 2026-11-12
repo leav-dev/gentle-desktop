@@ -102,6 +102,10 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --dir
 
 That produces `release/win-unpacked/Gentle Desktop.exe`, which is the full app.
 
+Always close a running build before repackaging. Rewriting `release/` while the app holds
+its own files leaves a half-written package that starts and exits with code 1 and no
+message — Windows refuses to replace a mapped executable, and nothing warns you.
+
 ## Layout
 
 | Path | Role |

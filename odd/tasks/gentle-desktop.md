@@ -108,6 +108,10 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E12 Repackaging while the previous build was still running produced an app that exited
+  with code 1 and wrote no message. Windows will not replace a mapped executable, so
+  `release/` ended up half-written while `scripts/verify-package.mjs` still passed: it
+  inspects the asar, not the executable. Close the app before packaging.
 - E11 The setup window hid the user's own provider. `nan` is not missing from pi's
   catalogue by accident: `gentle-pi/lib/nan-provider.ts` declares `NAN_PROVIDER_ID = "nan"`
   and registers it as a runtime extension. A bare SDK runtime therefore reports 43
