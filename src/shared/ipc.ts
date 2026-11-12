@@ -1,3 +1,4 @@
+import type { AuthPrompt } from '@earendil-works/pi-ai'
 import type {
   DialogRequest,
   ExtensionUiRequest,
@@ -5,7 +6,7 @@ import type {
   PromptDisposition,
   RpcEvent,
   SessionState
-} from './protocol'
+} from './protocol.ts'
 
 /**
  * Channel names for the main↔renderer bridge. Commands use `invoke`, streams use `on`,
@@ -25,7 +26,14 @@ export const IPC = {
   sessionMessages: 'session:get-messages',
   sessionsList: 'sessions:list',
   sessionsSwitch: 'sessions:switch',
-  dialogAnswer: 'dialog:answer'
+  dialogAnswer: 'dialog:answer',
+  authProviders: 'auth:providers',
+  authConfigured: 'auth:configured',
+  authLogin: 'auth:login',
+  authCancel: 'auth:cancel',
+  authPrompt: 'auth:prompt',
+  authEvent: 'auth:event',
+  authAnswer: 'auth:answer'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -63,6 +71,37 @@ export interface PromptRequest {
   message: string
 }
 
+/** A provider the setup window can offer, and how it can be registered. */
+export interface ProviderChoice {
+  id: string
+  name: string
+  supportsOauth: boolean
+  supportsApiKey: boolean
+  apiKeyLabel?: string
+  oauthLabel?: string
+  configured: boolean
+}
+
+export type AuthMethod = 'oauth' | 'api_key'
+
+export interface AuthLoginRequest {
+  providerId: string
+  type: AuthMethod
+}
+
+export type AuthLoginResult = { ok: true } | { ok: false; error: string; cancelled?: boolean }
+
+/** One question pi needs answered while registering a provider. */
+export interface AuthPromptRequest {
+  requestId: string
+  prompt: AuthPrompt
+}
+
+/** A progress event: a sign-in URL, a device code, or a status line. */
+export interface AuthEventEnvelope {
+  event: import('@earendil-works/pi-ai').AuthEvent
+}
+
 /** The surface exposed on `window.gentle`. Every entry is explicit and typed. */
 export interface GentleApi {
   host: {
@@ -84,5 +123,14 @@ export interface GentleApi {
     state: () => Promise<SessionState | null>
     messages: () => Promise<unknown[]>
     answerDialog: (response: ExtensionUiResponse) => void
+  }
+  auth: {
+    providers: () => Promise<ProviderChoice[]>
+    configured: (providerId: string) => Promise<boolean>
+    login: (request: AuthLoginRequest) => Promise<AuthLoginResult>
+    cancel: () => void
+    answerPrompt: (requestId: string, value: string | null) => void
+    onPrompt: (listener: (request: AuthPromptRequest) => void) => () => void
+    onEvent: (listener: (envelope: AuthEventEnvelope) => void) => () => void
   }
 }

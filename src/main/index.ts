@@ -1,11 +1,19 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
-import { IPC, type HostStatus, type PromptRequest } from '../shared/ipc.ts'
+import {
+  IPC,
+  type AuthLoginRequest,
+  type HostStatus,
+  type PromptRequest
+} from '../shared/ipc.ts'
 import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
+import { AuthPromptBridge } from './auth-bridge.ts'
+import { listProviderChoices, loginProvider, providerConfigured } from './auth.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
 
 let host: PiHost | null = null
+let authBridge: AuthPromptBridge | null = null
 
 function broadcast(channel: string, payload: unknown): void {
   for (const window of BrowserWindow.getAllWindows()) {
@@ -48,6 +56,41 @@ function registerIpc(instance: PiHost): void {
   })
 
   ipcMain.handle(IPC.sessionsSwitch, async (_event, sessionPath: string) => instance.switchSession(sessionPath))
+
+  const agentHome = (): string | null => instance.status().home ?? null
+
+  ipcMain.handle(IPC.authProviders, async () => {
+    const home = agentHome()
+    return home ? listProviderChoices(home) : []
+  })
+
+  ipcMain.handle(IPC.authConfigured, async (_event, providerId: string) => {
+    const home = agentHome()
+    return home ? providerConfigured(home, providerId) : false
+  })
+
+  ipcMain.handle(IPC.authLogin, async (event, request: AuthLoginRequest) => {
+    const home = agentHome()
+    if (!home) return { ok: false, error: 'The engine is not running yet.' }
+
+    authBridge?.cancelAll()
+    const bridge = new AuthPromptBridge(event.sender)
+    authBridge = bridge
+
+    try {
+      return await loginProvider(home, request.providerId, request.type, bridge.interaction())
+    } finally {
+      if (authBridge === bridge) authBridge = null
+    }
+  })
+
+  ipcMain.on(IPC.authAnswer, (_event, payload: { requestId: string; value: string | null }) => {
+    authBridge?.answer(payload.requestId, payload.value)
+  })
+
+  ipcMain.on(IPC.authCancel, () => {
+    authBridge?.cancelAll()
+  })
 
   ipcMain.on(IPC.dialogAnswer, (_event, response: ExtensionUiResponse) => {
     try {

@@ -1,9 +1,14 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   IPC,
+  type AuthEventEnvelope,
+  type AuthLoginRequest,
+  type AuthLoginResult,
+  type AuthPromptRequest,
   type GentleApi,
   type HostStatus,
   type PromptRequest,
+  type ProviderChoice,
   type SessionSummary
 } from '../shared/ipc.ts'
 import type {
@@ -40,6 +45,19 @@ const api: GentleApi = {
   sessions: {
     list: () => ipcRenderer.invoke(IPC.sessionsList) as Promise<SessionSummary[]>,
     switchTo: (sessionPath) => ipcRenderer.invoke(IPC.sessionsSwitch, sessionPath) as Promise<void>
+  },
+  auth: {
+    providers: () => ipcRenderer.invoke(IPC.authProviders) as Promise<ProviderChoice[]>,
+    configured: (providerId) => ipcRenderer.invoke(IPC.authConfigured, providerId) as Promise<boolean>,
+    login: (request: AuthLoginRequest) => ipcRenderer.invoke(IPC.authLogin, request) as Promise<AuthLoginResult>,
+    cancel: () => {
+      ipcRenderer.send(IPC.authCancel)
+    },
+    answerPrompt: (requestId: string, value: string | null) => {
+      ipcRenderer.send(IPC.authAnswer, { requestId, value })
+    },
+    onPrompt: (listener) => subscribe<AuthPromptRequest>(IPC.authPrompt, listener),
+    onEvent: (listener) => subscribe<AuthEventEnvelope>(IPC.authEvent, listener)
   },
   session: {
     prompt: (message) =>
