@@ -88,6 +88,9 @@ and the brand petal. Dim is metadata only.
 - **Rail sections** — `▾ NAME` + count. The set is predefined and the order is fixed:
   Tasks → Jobs → Helpers → Session. Section headers are not buttons; the whole section is
   scannable.
+- **Scrollbars** — thin, on a transparent track, thumb in `--border` with the accent only
+  on hover and `--accent-strong` while dragging. Scrolling containers reserve their gutter,
+  so a bar appearing never shifts text.
 - **Changes show a count, never a list.** The Status section states how many files changed
   and the line deltas; individual paths are noise in a status panel and belong to a
   dedicated view, not the chrome.

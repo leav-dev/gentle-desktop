@@ -1280,3 +1280,50 @@ body {
   color: var(--dim);
   font-size: 11px;
 }
+
+/* --- scrollbars --------------------------------------------------------------
+   The default Chromium bar is a bright slab that fights the theme. These follow the
+   terminal's quiet chrome: a transparent track, a thin thumb on the border color, and the
+   accent only on hover. `scrollbar-gutter: stable` keeps text from shifting when a bar
+   appears. */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.transcript,
+.rail,
+.agents-list,
+.palette-list,
+.floating-body {
+  scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  /* Inset by a transparent border so the thumb reads as a rounded rail, not a slab. */
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--accent-strong);
+  background-clip: content-box;
+}
