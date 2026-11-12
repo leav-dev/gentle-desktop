@@ -217,6 +217,9 @@ export function App(): React.JSX.Element {
         onToggleRail={() => setRailOverlayOpen((open) => !open)}
         onOpenSetup={openWizard}
         onOpenHistory={openHistory}
+        onChooseFolder={() => {
+          void engine.chooseWorkspace()
+        }}
       />
       <div className={`app-body${railWide ? '' : ' app-body-rail-hidden'}`} ref={bodyRef}>
         <section className="app-conversation">
@@ -268,6 +271,9 @@ export function App(): React.JSX.Element {
           onOpenSubagents={() => setAgentsOpen(true)}
           onOpenProviders={openWizard}
           onOpenCommands={openPalette}
+          onChooseFolder={() => {
+            void engine.chooseWorkspace()
+          }}
         />
       ) : null}
       {paletteOpen ? (

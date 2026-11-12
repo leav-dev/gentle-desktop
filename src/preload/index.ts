@@ -22,7 +22,8 @@ import {
   type SessionStats,
   type SessionSummary,
   type StoredCustomProvider,
-  type SubscriptionUsage
+  type SubscriptionUsage,
+  type WorkspaceChangeResult
 } from '../shared/ipc.ts'
 import type {
   DialogRequest,
@@ -109,6 +110,9 @@ const api: GentleApi = {
   },
   repo: {
     status: () => ipcRenderer.invoke(IPC.repoStatus) as Promise<RepoStatus>
+  },
+  workspace: {
+    choose: () => ipcRenderer.invoke(IPC.workspaceChoose) as Promise<WorkspaceChangeResult>
   },
   odd: {
     tasks: () => ipcRenderer.invoke(IPC.oddTasks) as Promise<OddTaskFeature[]>

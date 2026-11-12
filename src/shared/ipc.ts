@@ -19,6 +19,7 @@ export const IPC = {
   hostNotice: 'host:notice',
   hostGetStatus: 'host:get-status',
   hostRestart: 'host:restart',
+  workspaceChoose: 'workspace:choose',
   sessionPrompt: 'session:prompt',
   sessionAbort: 'session:abort',
   sessionNew: 'session:new',
@@ -58,6 +59,12 @@ export interface HostStatus {
   piEntry?: string
   home?: string
   cwd?: string
+  /**
+   * The working folder named for a person (S17): the folder's own name, or plain words
+   * when the engine runs from the application's own directory. The full path stays on
+   * the tooltip (`cwd`) and appears nowhere else in the app.
+   */
+  cwdLabel?: string
   /** How many times supervision already restarted the engine. */
   restarts: number
 }
@@ -262,6 +269,17 @@ export interface AuthLoginRequest {
 
 export type AuthLoginResult = { ok: true } | { ok: false; error: string; cancelled?: boolean }
 
+/**
+ * Outcome of choosing a working folder (S17). `changed` carries the folder now in use;
+ * `failed` carries the reason and the folder that keeps working instead. The error text
+ * never repeats the full path — the header tooltip is the only place that appears.
+ */
+export interface WorkspaceChangeResult {
+  outcome: 'changed' | 'cancelled' | 'failed'
+  cwd?: string
+  error?: string
+}
+
 /** One question pi needs answered while registering a provider. */
 export interface AuthPromptRequest {
   requestId: string
@@ -323,6 +341,10 @@ export interface GentleApi {
     answerPrompt: (requestId: string, value: string | null) => void
     onPrompt: (listener: (request: AuthPromptRequest) => void) => () => void
     onEvent: (listener: (envelope: AuthEventEnvelope) => void) => () => void
+  }
+  /** The working folder (S17): pick a new one through the system's own folder picker. */
+  workspace: {
+    choose: () => Promise<WorkspaceChangeResult>
   }
   /** Custom providers written to the engine's own models.json (S16). */
   customProviders: {

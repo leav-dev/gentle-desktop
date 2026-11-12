@@ -11,7 +11,7 @@ import type { CommandChoice } from '../../../shared/ipc.ts'
  * missing row: the user presses it, a turn starts, and nothing happens.
  */
 
-export type GentleDestinationId = 'profiles' | 'mode' | 'subagents' | 'providers' | 'commands'
+export type GentleDestinationId = 'profiles' | 'mode' | 'folder' | 'subagents' | 'providers' | 'commands'
 
 export interface GentleDestination {
   id: GentleDestinationId
@@ -40,8 +40,8 @@ function findCommand(commands: readonly CommandChoice[], pattern: RegExp): strin
 
 /**
  * Builds the destination list in a fixed order: the things that change *how the agent
- * behaves* come first, then who is working, where the keys live, and finally the escape
- * hatch to every command the engine has.
+ * behaves* come first, then where it works, who is working, where the keys live, and
+ * finally the escape hatch to every command the engine has.
  */
 export function resolveGentleDestinations(commands: readonly CommandChoice[]): GentleDestination[] {
   const destinations: GentleDestination[] = []
@@ -67,6 +67,12 @@ export function resolveGentleDestinations(commands: readonly CommandChoice[]): G
   }
 
   destinations.push(
+    {
+      id: 'folder',
+      label: 'Choose a folder',
+      detail: 'Pick the folder the agent works in, through the system folder picker',
+      command: null
+    },
     {
       id: 'subagents',
       label: 'Subagents',

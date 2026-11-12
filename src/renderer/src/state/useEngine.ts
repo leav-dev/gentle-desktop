@@ -7,7 +7,8 @@ import type {
   OddTaskFeature,
   RepoStatus,
   SessionStats,
-  SubscriptionUsage
+  SubscriptionUsage,
+  WorkspaceChangeResult
 } from '../../../shared/ipc.ts'
 import { modelRef } from './format.ts'
 import { shouldShowNotice } from './noticeFilter.ts'
@@ -90,6 +91,8 @@ export interface EngineView {
   switchSession: (sessionPath: string) => void
   abort: () => void
   newSession: () => void
+  /** Opens the system folder picker and moves the engine there (S17). */
+  chooseWorkspace: () => Promise<WorkspaceChangeResult>
   answerDialog: (request: DialogRequest, answer: DialogAnswer) => void
 }
 
@@ -269,6 +272,23 @@ export function useEngine(): EngineView {
     window.gentle.session.answerDialog(response)
   }, [])
 
+  // Moving the engine to the chosen folder is the main process's work; the renderer only
+  // reports the outcome. A failed move must never be silent (S17): the toast says why and
+  // that the previous folder keeps working, without repeating the full path anywhere —
+  // the header tooltip is the only place that shows it.
+  const chooseWorkspace = useCallback(async (): Promise<WorkspaceChangeResult> => {
+    const result = await window.gentle.workspace.choose()
+    if (result.outcome === 'failed') {
+      notifySeq.current += 1
+      setNotice({
+        id: notifySeq.current,
+        message: `The agent could not start in the chosen folder, so it keeps working in the previous one. (${result.error ?? 'the engine did not report why'})`,
+        tone: 'error'
+      })
+    }
+    return result
+  }, [])
+
   return {
     status,
     ready,
@@ -294,6 +314,7 @@ export function useEngine(): EngineView {
     abort,
     newSession,
     switchSession,
+    chooseWorkspace,
     answerDialog
   }
 }

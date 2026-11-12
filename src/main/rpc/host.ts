@@ -1,5 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import type { CommandChoice, EngineModelRef, HostStatus, SessionStats } from '../../shared/ipc.ts'
+import type { CommandChoice, EngineModelRef, HostStatus, SessionStats, WorkspaceChangeResult } from '../../shared/ipc.ts'
 import type {
   DialogRequest,
   ExtensionUiRequest,
@@ -100,15 +100,25 @@ export class PiHost {
    * still starting. The conversation survives it — the session file the old child had
    * open is re-opened in the new one, so the history the transcript shows stays what the
    * engine holds. Used after configuration changes the engine only reads at startup
-   * (custom providers), and available to the UI the same way supervision restarts are.
+   * (custom providers, the working folder), and available to the UI the same way
+   * supervision restarts are.
+   *
+   * An explicit `sessionFile` skips the capture from the current child — a child that is
+   * already failing cannot be asked for its state, and the caller then owns the capture.
    */
-  async restart(): Promise<HostStatus> {
-    let sessionFile: string | null = null
-    try {
-      sessionFile = (await this.sessionState())?.sessionFile ?? null
-    } catch {
-      // The child may already be gone; there is then nothing to preserve.
-      sessionFile = null
+  async restart(overrides: { cwd?: string } = {}, sessionFile?: string | null): Promise<HostStatus> {
+    if (overrides.cwd !== undefined) {
+      // Only the working folder ever changes here; the rest of the launch plan is kept.
+      this.#options = { ...this.#options, cwd: overrides.cwd }
+    }
+
+    if (sessionFile === undefined) {
+      try {
+        sessionFile = (await this.sessionState())?.sessionFile ?? null
+      } catch {
+        // The child may already be gone; there is then nothing to preserve.
+        sessionFile = null
+      }
     }
 
     await this.stop()
@@ -125,6 +135,35 @@ export class PiHost {
       }
     }
     return this.status()
+  }
+
+  /**
+   * Moves the engine to a new working folder (S17) through the same bounded restart the
+   * UI already has. The session file is captured before the first stop, so the
+   * conversation survives even the failure path: when the engine cannot become ready in
+   * the chosen folder, the previous folder is restarted with the same session, and the
+   * caller tells the user why the move failed instead of leaving a silent window.
+   */
+  async changeDirectory(cwd: string): Promise<WorkspaceChangeResult> {
+    const previousCwd = this.#options.cwd ?? null
+    let sessionFile: string | null = null
+    try {
+      sessionFile = (await this.sessionState())?.sessionFile ?? null
+    } catch {
+      sessionFile = null
+    }
+
+    const moved = await this.restart({ cwd }, sessionFile)
+    if (moved.phase === 'ready') {
+      return { outcome: 'changed', cwd }
+    }
+
+    const error = moved.detail ?? 'the engine could not start in the chosen folder'
+    if (previousCwd !== null && previousCwd !== cwd) {
+      await this.restart({ cwd: previousCwd }, sessionFile)
+      return { outcome: 'failed', error, cwd: previousCwd }
+    }
+    return { outcome: 'failed', error }
   }
 
   /** Polls supervision status until the child is ready, has failed, or the budget is spent. */

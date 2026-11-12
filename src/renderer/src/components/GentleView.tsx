@@ -17,7 +17,8 @@ export function GentleView({
   onRunCommand,
   onOpenSubagents,
   onOpenProviders,
-  onOpenCommands
+  onOpenCommands,
+  onChooseFolder
 }: {
   onClose: () => void
   /** Runs a command through the ordinary prompt path, as if it had been typed. */
@@ -25,6 +26,8 @@ export function GentleView({
   onOpenSubagents: () => void
   onOpenProviders: () => void
   onOpenCommands: () => void
+  /** Opens the system folder picker so the user can move the agent elsewhere (S17). */
+  onChooseFolder: () => void
 }): React.JSX.Element {
   const [commands, setCommands] = useState<readonly CommandChoice[]>([])
   const [index, setIndex] = useState(0)
@@ -61,12 +64,15 @@ export function GentleView({
         case 'commands':
           onOpenCommands()
           break
+        case 'folder':
+          onChooseFolder()
+          break
         default:
           if (destination.command !== null) onRunCommand(`/${destination.command}`)
       }
       onClose()
     },
-    [onClose, onOpenCommands, onOpenProviders, onOpenSubagents, onRunCommand]
+    [onChooseFolder, onClose, onOpenCommands, onOpenProviders, onOpenSubagents, onRunCommand]
   )
 
   // There is nothing to type into here, and `autoFocus` on a plain container is not

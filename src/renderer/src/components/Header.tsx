@@ -35,7 +35,10 @@ const ENGINE_LABELS: Record<HostStatus['phase'], string | null> = {
   stopped: 'engine stopped'
 }
 
-/** The last path segment, for both separators: a wrong pattern silently shows everything. */
+/**
+ * Fallback when the main process has not labelled the folder yet (a status without `cwd`);
+ * the labelled name from S17 arrives on every status that has a folder at all.
+ */
 function projectFolder(cwd: string | undefined): string | null {
   if (cwd === undefined || cwd.length === 0) return null
   const lastSeparator = Math.max(cwd.lastIndexOf('/'), cwd.lastIndexOf('\\'))
@@ -57,7 +60,8 @@ export function Header({
   onOpenAgents,
   onToggleRail,
   onOpenSetup,
-  onOpenHistory
+  onOpenHistory,
+  onChooseFolder
 }: {
   status: HostStatus
   model: unknown
@@ -74,6 +78,8 @@ export function Header({
   onToggleRail: () => void
   onOpenSetup: () => void
   onOpenHistory: () => void
+  /** Opens the system folder picker so the user can move the agent elsewhere (S17). */
+  onChooseFolder: () => void
 }): React.JSX.Element {
   const label = modelLabel(model)
   const level = effortLabel(thinkingLevel)
@@ -91,10 +97,14 @@ export function Header({
   })()
 
   const dirty = repo?.dirtyCount ?? 0
-  const projectName = projectFolder(status.cwd)
+  // The header always says where the agent works (S17): the folder's own name, or plain
+  // words when it is the application's own directory. The full path lives on the tooltip
+  // only — never in the transcript or the rail.
+  const projectName = status.cwdLabel ?? projectFolder(status.cwd)
 
   const actions: Array<{ key: string; label: string; shortcut: string | null; onClick: () => void }> = [
     { key: 'new', label: 'New', shortcut: null, onClick: onNewSession },
+    { key: 'folder', label: 'Choose a folder', shortcut: null, onClick: onChooseFolder },
     { key: 'history', label: 'History', shortcut: historyShortcut(), onClick: onOpenHistory },
     { key: 'gentle', label: 'Gentle', shortcut: gentleShortcut(), onClick: onOpenGentle },
     { key: 'commands', label: 'Commands', shortcut: commandsShortcut(), onClick: onOpenCommands },

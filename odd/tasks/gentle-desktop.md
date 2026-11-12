@@ -95,6 +95,16 @@ S16. A custom provider is added entirely inside the app: name, base URL, API key
     - the provider id `nan` belongs to a gentle-pi extension and must be refused, and
       `models-store.json` in the same directory is the engine's own cache and is never touched.
 
+S17. The folder the agent works in is always visible, and the user can change it. The header
+    shows it by name with the full path on hover; a window that is still running from the
+    application's own installation folder says so instead of naming a folder that means
+    nothing to the user. Changing it goes through the system's own folder picker, with no
+    typing of paths, and the choice survives a restart of the app. Nothing starts a turn in a
+    folder the user did not choose without saying which one it is.
+
+    User's words: "acabo de caer en cuenta de un error, no se esta mostrando que carpeta en la
+    que se va trabajar".
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
@@ -141,6 +151,8 @@ T31. [x] Read subscription usage from the provider's own quota endpoint with the
 T35. [x] Render subscription usage and the `sub` billing marker in the top bar. — S11
 T56. Render assistant output as Markdown: parser, React renderer without raw HTML, and a
     small fenced-code highlighter. User text stays literal. — S15
+T109. Show the working folder in the header and let the user pick another one, with the
+    choice remembered across launches. — S17
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
@@ -288,3 +300,8 @@ L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
 L18. User instruction, verbatim: "retiraremos la seccionde helpers del layout". The rail keeps
     Status and Tasks; subagent activity stays available in the Agents window and its data
     plumbing is unchanged.
+
+L19. User report, verbatim: "acabo de caer en cuenta de un error, no se esta mostrando que
+    carpeta en la que se va trabajar". The header rendered the folder name only when the
+    engine reported a cwd, and the packaged app runs from its own installation directory,
+    so the value was either meaningless or empty.

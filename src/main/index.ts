@@ -1,12 +1,13 @@
-import { join } from 'node:path'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { dirname, join } from 'node:path'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import {
   IPC,
   type AuthLoginRequest,
   type ConnectionTestInput,
   type CustomProviderInput,
   type HostStatus,
-  type PromptRequest
+  type PromptRequest,
+  type WorkspaceChangeResult
 } from '../shared/ipc.ts'
 import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
 import type { AuthInteraction } from '@earendil-works/pi-ai'
@@ -26,9 +27,39 @@ import { readProfiles, resolveActiveProfile } from './profiles.ts'
 import { readSubscriptionUsage } from './subscription-usage.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
+import {
+  applicationDirectory,
+  readRememberedWorkspace,
+  writeRememberedWorkspace,
+  workspaceLabel
+} from './workspace.ts'
 
 let host: PiHost | null = null
 let authBridge: AuthPromptBridge | null = null
+
+/**
+ * The application's own directory: where its executable sits once packaged. A window
+ * still working from here must say so in the header (S17) instead of naming an install
+ * folder like `win-unpacked`. In dev the working directory is the application's own tree.
+ */
+const APP_DIRECTORY = applicationDirectory(app.getPath('exe'), app.isPackaged, process.cwd())
+
+/** The app's own state directory — where the chosen folder is remembered, never in a repo. */
+function stateDir(): string {
+  return app.getPath('userData')
+}
+
+/**
+ * Attaches the person-readable folder name to every status the UI sees. The renderer has
+ * no notion of the application's own directory — and must not need one — so the label is
+ * decided here, once, wherever a status leaves the main process.
+ */
+function decorateStatus(status: HostStatus): HostStatus {
+  if (status.cwd === undefined) return status
+  const label = workspaceLabel(status.cwd, APP_DIRECTORY)
+  if (label === null) return status
+  return { ...status, cwdLabel: label.name }
+}
 
 function broadcast(channel: string, payload: unknown): void {
   for (const window of BrowserWindow.getAllWindows()) {
@@ -59,7 +90,7 @@ function withPrefilledKey(interaction: AuthInteraction, apiKey: string): AuthInt
 
 function createHost(): PiHost {
   return new PiHost({
-    onStatus: (status: HostStatus) => broadcast(IPC.hostStatus, status),
+    onStatus: (status: HostStatus) => broadcast(IPC.hostStatus, decorateStatus(status)),
     onEvent: (event: RpcEvent) => broadcast(IPC.hostEvent, event),
     onDialog: (request) => broadcast(IPC.hostDialog, request),
     onNotice: (request) => broadcast(IPC.hostNotice, request),
@@ -68,9 +99,40 @@ function createHost(): PiHost {
 }
 
 function registerIpc(instance: PiHost): void {
-  ipcMain.handle(IPC.hostGetStatus, () => instance.status())
+  ipcMain.handle(IPC.hostGetStatus, () => decorateStatus(instance.status()))
 
-  ipcMain.handle(IPC.hostRestart, async () => instance.restart())
+  ipcMain.handle(IPC.hostRestart, async () => decorateStatus(await instance.restart()))
+
+  ipcMain.handle(IPC.workspaceChoose, async (event): Promise<WorkspaceChangeResult> => {
+    const current = instance.status().cwd
+    // `defaultPath` must be absent when there is no folder yet, not set to undefined.
+    const options = {
+      title: 'Choose a folder',
+      buttonLabel: 'Choose this folder',
+      ...(current !== undefined ? { defaultPath: current } : {}),
+      properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>
+    }
+    // The picker belongs to the window that asked for it, so it centres on that window.
+    const owner = BrowserWindow.fromWebContents(event.sender)
+    const picked = owner !== null && !owner.isDestroyed() ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+
+    const folder = picked.filePaths[0]
+    if (picked.canceled || folder === undefined) return { outcome: 'cancelled' }
+
+    const change = await instance.changeDirectory(folder)
+    if (change.outcome !== 'changed') return change
+
+    // Only a folder the engine actually started in is remembered; a failed start must
+    // not survive an app restart.
+    try {
+      writeRememberedWorkspace(stateDir(), folder)
+    } catch (error) {
+      // The session works in the chosen folder either way; the choice is simply not
+      // remembered for the next launch, which the next picker can redo.
+      process.stderr.write(`[workspace] cannot remember the folder: ${error instanceof Error ? error.message : String(error)}\n`)
+    }
+    return change
+  })
 
   ipcMain.handle(IPC.sessionPrompt, async (_event, request: PromptRequest) => {
     return instance.prompt(request.message)
@@ -262,8 +324,14 @@ app.whenReady().then(() => {
   registerIpc(host)
   createWindow()
 
+  // The user's remembered choice wins over the environment override: it is the folder
+  // they picked on purpose. With no choice yet (S17, first run) the default still stands,
+  // but the header now says when that default is the application's own directory.
+  const remembered = readRememberedWorkspace(stateDir())
+  const cwd = remembered ?? process.env['GENTLE_DESKTOP_CWD'] ?? process.cwd()
+
   // The engine starts with the app: the window is the only surface the user needs.
-  host.start({ cwd: process.env['GENTLE_DESKTOP_CWD'] ?? process.cwd(), moduleBase: __dirname })
+  host.start({ cwd, moduleBase: __dirname })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
