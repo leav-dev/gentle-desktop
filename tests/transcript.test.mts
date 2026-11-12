@@ -1,13 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { AssistantMessageEvent, RpcEvent } from '../src/shared/protocol.ts'
-import {
-  appendUserMessage,
-  initialTranscriptState,
-  reduceTranscript,
-  type TranscriptItem,
-  hydrateTranscript
-} from '../src/renderer/src/state/transcript.ts'
+import { appendUserMessage, hasVisibleContent, hydrateTranscript, initialTranscriptState, reduceTranscript, type TranscriptItem } from '../src/renderer/src/state/transcript.ts'
 
 function messageUpdate(assistantMessageEvent: AssistantMessageEvent): RpcEvent {
   return { type: 'message_update', assistantMessageEvent }
@@ -288,4 +282,26 @@ test('hydration ignores shapes it does not understand instead of failing the vie
   ])
 
   assert.deepEqual(state.items, [], 'nothing renderable, nothing invented')
+})
+
+test('a text item with nothing in it is not drawn', () => {
+  // The transcript is a flex column with a gap: an empty block costs a whole row, which is
+  // what the user saw as "several lines under my message".
+  assert.equal(hasVisibleContent({ kind: 'user', id: 'u', text: '' }), false)
+  assert.equal(hasVisibleContent({ kind: 'user', id: 'u', text: '   \n  ' }), false)
+  assert.equal(hasVisibleContent({ kind: 'assistant', id: 'a', text: '', streaming: false }), false)
+  assert.equal(hasVisibleContent({ kind: 'thinking', id: 't', text: '\n' }), false)
+})
+
+test('content and the streaming cursor are both kept', () => {
+  assert.equal(hasVisibleContent({ kind: 'user', id: 'u', text: 'hola' }), true)
+  assert.equal(
+    hasVisibleContent({ kind: 'assistant', id: 'a', text: '', streaming: true }),
+    true,
+    'the caret must not vanish between deltas'
+  )
+  assert.equal(
+    hasVisibleContent({ kind: 'tool', id: 'x', toolCallId: 'c', toolName: 'bash', status: 'running' }),
+    true
+  )
 })

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { TranscriptItem } from '../state/transcript.ts'
+import { hasVisibleContent } from '../state/transcript.ts'
 import { Message } from './Message.tsx'
 import { ToolCard } from './ToolCard.tsx'
 
@@ -33,7 +34,7 @@ export function Transcript({ items }: { items: readonly TranscriptItem[] }): Rea
   return (
     <div className="transcript" ref={scrollRef} onScroll={handleScroll} role="log" aria-live="polite">
       {items.length === 0 ? <p className="transcript-empty">No messages yet.</p> : null}
-      {items.map((item) =>
+      {items.filter(hasVisibleContent).map((item) =>
         item.kind === 'tool' ? (
           <ToolCard key={item.id} item={item} />
         ) : (

@@ -46,6 +46,24 @@ export interface ToolItem {
 export type TranscriptItem = AssistantTextItem | ThinkingItem | UserMessageItem | ToolItem
 
 /**
+ * Whether an item has anything to draw.
+ *
+ * The transcript is a flex column with a gap, so a text item whose text is empty still
+ * occupies a row — a user message that arrived as whitespace, or an assistant text block
+ * the engine opened and left blank, shows up as a gap of several lines under the message
+ * above it. A tool card is never empty: it carries a name and a status.
+ *
+ * A streaming item is kept even while empty, because it is the cursor the reader is
+ * following; hiding it would make the caret vanish between deltas.
+ */
+export function hasVisibleContent(item: TranscriptItem): boolean {
+  if (item.kind === 'tool') return true
+  // Only assistant text and thinking carry `streaming`; a user message never does.
+  if ('streaming' in item && item.streaming === true) return true
+  return item.text.trim().length > 0
+}
+
+/**
  * Open streaming blocks, keyed by the `contentIndex` of the current assistant message.
  * The index repeats across turns, so a new block always allocates a fresh item id and
  * the map only ever holds blocks of the message currently being streamed.
