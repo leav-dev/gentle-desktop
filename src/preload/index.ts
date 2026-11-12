@@ -8,6 +8,10 @@ import {
   type AuthLoginResult,
   type AuthPromptRequest,
   type CommandChoice,
+  type ConnectionTestInput,
+  type ConnectionTestResult,
+  type CustomProviderInput,
+  type CustomProviderResult,
   type GentleApi,
   type HostStatus,
   type OddTaskFeature,
@@ -17,6 +21,7 @@ import {
   type RepoStatus,
   type SessionStats,
   type SessionSummary,
+  type StoredCustomProvider,
   type SubscriptionUsage
 } from '../shared/ipc.ts'
 import type {
@@ -78,6 +83,14 @@ const api: GentleApi = {
     },
     onPrompt: (listener) => subscribe<AuthPromptRequest>(IPC.authPrompt, listener),
     onEvent: (listener) => subscribe<AuthEventEnvelope>(IPC.authEvent, listener)
+  },
+  customProviders: {
+    list: () => ipcRenderer.invoke(IPC.customProvidersList) as Promise<StoredCustomProvider[]>,
+    save: (input: CustomProviderInput) =>
+      ipcRenderer.invoke(IPC.customProvidersSave, input) as Promise<CustomProviderResult>,
+    remove: (id: string) => ipcRenderer.invoke(IPC.customProvidersRemove, id) as Promise<CustomProviderResult>,
+    testConnection: (input: ConnectionTestInput) =>
+      ipcRenderer.invoke(IPC.customProvidersTest, input) as Promise<ConnectionTestResult>
   },
   session: {
     prompt: (message) =>

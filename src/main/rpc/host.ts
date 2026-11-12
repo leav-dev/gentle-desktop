@@ -21,6 +21,8 @@ export interface PiHostListener {
 
 const MAX_RESTARTS = 3
 const RESTART_DELAY_MS = 750
+/** How long an explicit restart waits for the new child to prove itself before giving up. */
+const RESTART_READY_TIMEOUT_MS = 15_000
 const STDERR_TAIL_LIMIT = 4096
 
 /**
@@ -92,11 +94,60 @@ export class PiHost {
     this.#setStatus({ phase: 'stopped', restarts: this.#status.restarts })
   }
 
+  /**
+   * Restarts the engine child on purpose, bounded: it waits for the new child to answer
+   * the protocol (or give up after a timeout) instead of returning while the engine is
+   * still starting. The conversation survives it — the session file the old child had
+   * open is re-opened in the new one, so the history the transcript shows stays what the
+   * engine holds. Used after configuration changes the engine only reads at startup
+   * (custom providers), and available to the UI the same way supervision restarts are.
+   */
   async restart(): Promise<HostStatus> {
+    let sessionFile: string | null = null
+    try {
+      sessionFile = (await this.sessionState())?.sessionFile ?? null
+    } catch {
+      // The child may already be gone; there is then nothing to preserve.
+      sessionFile = null
+    }
+
     await this.stop()
     this.#status = { ...this.#status, restarts: 0 }
     this.start(this.#options)
-    return this.#status
+
+    const ready = await this.#waitForReady(RESTART_READY_TIMEOUT_MS)
+    if (ready && sessionFile !== null) {
+      try {
+        await this.switchSession(sessionFile)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        this.#listener.onDiagnostic(`cannot reopen the previous session: ${message}`)
+      }
+    }
+    return this.status()
+  }
+
+  /** Polls supervision status until the child is ready, has failed, or the budget is spent. */
+  #waitForReady(timeoutMs: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const startedAt = Date.now()
+      const timer = setInterval(() => {
+        if (this.#status.phase === 'ready') {
+          clearInterval(timer)
+          resolve(true)
+          return
+        }
+        if (this.#status.phase === 'crashed' || this.#status.phase === 'stopped') {
+          clearInterval(timer)
+          resolve(false)
+          return
+        }
+        if (Date.now() - startedAt >= timeoutMs) {
+          clearInterval(timer)
+          resolve(false)
+        }
+      }, 100)
+    })
   }
 
   async prompt(message: string): Promise<PromptDisposition> {

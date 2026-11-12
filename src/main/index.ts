@@ -3,12 +3,22 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import {
   IPC,
   type AuthLoginRequest,
+  type ConnectionTestInput,
+  type CustomProviderInput,
   type HostStatus,
   type PromptRequest
 } from '../shared/ipc.ts'
 import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
+import type { AuthInteraction } from '@earendil-works/pi-ai'
+import { invalidateAuthRuntime } from './auth.ts'
 import { AuthPromptBridge } from './auth-bridge.ts'
 import { listProviderChoices, loginProvider, providerConfigured } from './auth.ts'
+import {
+  listCustomProviders,
+  removeCustomProvider,
+  saveCustomProvider,
+  testConnection
+} from './custom-providers.ts'
 import { listOddTasks } from './odd-tasks.ts'
 import { collectRepoStatus, emptyRepoStatus } from './repo.ts'
 import { readPermissionMode, resolveConfigHome } from './permission-mode.ts'
@@ -23,6 +33,27 @@ let authBridge: AuthPromptBridge | null = null
 function broadcast(channel: string, payload: unknown): void {
   for (const window of BrowserWindow.getAllWindows()) {
     if (!window.isDestroyed()) window.webContents.send(channel, payload)
+  }
+}
+
+/**
+ * Answers pi's first secret prompt with the key the user already typed in the custom
+ * provider form, so the sign-in question is not asked a second time. Any later prompt
+ * still reaches the window. The key exists only in memory here; pi's own login is what
+ * persists it, into auth.json.
+ */
+function withPrefilledKey(interaction: AuthInteraction, apiKey: string): AuthInteraction {
+  let used = false
+  return {
+    ...(interaction.signal !== undefined ? { signal: interaction.signal } : {}),
+    prompt: async (prompt) => {
+      if (!used && prompt.type === 'secret') {
+        used = true
+        return apiKey
+      }
+      return interaction.prompt(prompt)
+    },
+    notify: (event) => interaction.notify(event)
   }
 }
 
@@ -128,11 +159,42 @@ function registerIpc(instance: PiHost): void {
     authBridge = bridge
 
     try {
-      return await loginProvider(home, request.providerId, request.type, bridge.interaction())
+      const interaction =
+        request.apiKey !== undefined ? withPrefilledKey(bridge.interaction(), request.apiKey) : bridge.interaction()
+      return await loginProvider(home, request.providerId, request.type, interaction)
     } finally {
       if (authBridge === bridge) authBridge = null
     }
   })
+
+  ipcMain.handle(IPC.customProvidersList, async () => {
+    const home = agentHome()
+    // Without an agent home there is no file to read; an empty list is the honest answer.
+    return home ? listCustomProviders(home) : []
+  })
+
+  ipcMain.handle(IPC.customProvidersSave, async (_event, input: CustomProviderInput) => {
+    const home = agentHome()
+    if (!home) return { ok: false, error: 'The engine is not running yet. Please wait a moment and try again.' }
+
+    const result = await saveCustomProvider(input, home)
+    if (result.ok) {
+      // The cached SDK runtime read models.json before this save; without a reset its
+      // catalogue would not know the new provider and the sign-in below would fail.
+      invalidateAuthRuntime()
+    }
+    return result
+  })
+
+  ipcMain.handle(IPC.customProvidersRemove, async (_event, id: string) => {
+    const home = agentHome()
+    if (!home) return { ok: false, error: 'The engine is not running yet. Please wait a moment and try again.' }
+    const result = await removeCustomProvider(id, home)
+    if (result.ok) invalidateAuthRuntime()
+    return result
+  })
+
+  ipcMain.handle(IPC.customProvidersTest, async (_event, input: ConnectionTestInput) => testConnection(input))
 
   ipcMain.on(IPC.authAnswer, (_event, payload: { requestId: string; value: string | null }) => {
     authBridge?.answer(payload.requestId, payload.value)

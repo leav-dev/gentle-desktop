@@ -14,6 +14,11 @@ win:
   target:
     - nsis
   artifactName: ${name}-${version}-${arch}.${ext}
+  # Editing the executable's resources pulls in electron-builder's signing toolkit, whose
+  # archive holds macOS symlinks. Extracting those needs a privilege a normal Windows account
+  # does not have, so the build died there before reaching NSIS. Skipping the edit costs the
+  # custom icon and version metadata in the .exe; it buys a build anyone can reproduce.
+  signAndEditExecutable: false
 
 nsis:
   oneClick: false

@@ -6,6 +6,7 @@ import type {
   AuthPromptRequest,
   ProviderChoice
 } from '../../../shared/ipc.ts'
+import { CustomProviderForm } from './CustomProviderForm.tsx'
 
 /**
  * The first-run setup window (S8/S9): provider registration driven entirely by the app.
@@ -56,6 +57,8 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [connectedId, setConnectedId] = useState<string | null>(null)
   const [usingModel, setUsingModel] = useState<{ providerId: string; modelId: string } | null>(null)
+  // The custom provider form (S16) replaces the catalogue list while it is open.
+  const [customFormOpen, setCustomFormOpen] = useState(false)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
   const firstOptionRef = useRef<HTMLButtonElement | null>(null)
@@ -235,6 +238,26 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
     onClose()
   }, [cancelPending, onClose])
 
+  /**
+   * A custom provider is saved, signed in and the engine has restarted by the time this
+   * runs. The catalogue is re-read so the new provider appears with its models, and the
+   * wizard closes itself the same way a completed sign-in does.
+   */
+  const handleCustomSaved = useCallback(
+    (providerId: string) => {
+      setCustomFormOpen(false)
+      setConnectedId(providerId)
+      void window.gentle.auth
+        .providers()
+        .then(setProviders)
+        .catch(() => {
+          // The saved provider stands; the list can lag behind a restart.
+        })
+      closeTimer.current = window.setTimeout(onClose, 1600)
+    },
+    [onClose]
+  )
+
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent): void => {
       if (event.key !== 'Escape') return
@@ -280,8 +303,16 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
               ? 'The provider list could not be loaded. Please close this window and try again.'
               : 'Loading providers…'}
           </p>
+        ) : customFormOpen ? (
+          <CustomProviderForm
+            onBack={() => {
+              setCustomFormOpen(false)
+            }}
+            onSaved={handleCustomSaved}
+          />
         ) : (
-          <ul className="wizard-providers">
+          <>
+            <ul className="wizard-providers">
             {providers.map((provider) => {
               const connected = provider.configured || connectedId === provider.id
               const models = provider.models
@@ -334,7 +365,22 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
                 </li>
               )
             })}
-          </ul>
+            </ul>
+            <div className="wizard-add">
+              <button
+                type="button"
+                className="wizard-method"
+                onClick={() => {
+                  setCustomFormOpen(true)
+                }}
+              >
+                Add a custom provider
+              </button>
+              <p className="wizard-add-hint">
+                For a provider with its own server address and API key.
+              </p>
+            </div>
+          </>
         )}
 
         {connecting !== null ? (

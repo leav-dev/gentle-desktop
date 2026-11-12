@@ -74,6 +74,26 @@ S15. Assistant output renders as the terminal renders it: Markdown becomes real 
     markup. User input is never interpreted. User's words: "veo outpus con dobles asteriscos
     pero no veo el resaltado que se maneja en la terminal".
 
+S16. A custom provider is added entirely inside the app: name, base URL, API key and model
+    ids, with no file editing and no terminal. It is written to the file the engine actually
+    reads, validated before and after writing, and the engine picks it up without the user
+    restarting anything.
+
+    Engine facts this rests on (verified against pi 1.5.2):
+    - the file is `<agent dir>/models.json`, and the agent dir is `PI_CODING_AGENT_DIR`,
+      which this app sets to `~/.gentle-shell/agent` — so the path is
+      `~/.gentle-shell/agent/models.json`, never `~/.gentle-shell/gentle-ai/models.json`,
+      which is gentle-pi's own role-to-model store and is a different schema;
+    - shape: `{ "providers": { "<id>": { "name", "baseUrl", "api", "models": [{ "id",
+      "name" }] } } }`; the only required model field is `id`, and `api` plus `baseUrl` are
+      required at provider or model level;
+    - credentials go to `auth.json` in the same directory through the login flow the app
+      already drives, so the key never becomes part of `models.json`;
+    - one malformed file disables every custom provider at load, non-throwing, so the app
+      validates before writing and keeps the previous file intact on any doubt;
+    - the provider id `nan` belongs to a gentle-pi extension and must be refused, and
+      `models-store.json` in the same directory is the engine's own cache and is never touched.
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot

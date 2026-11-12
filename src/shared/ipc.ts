@@ -42,7 +42,11 @@ export const IPC = {
   agentMode: 'agent:mode',
   usageRead: 'usage:read',
   profilesRead: 'profiles:read',
-  profilesActive: 'profiles:active'
+  profilesActive: 'profiles:active',
+  customProvidersList: 'custom-providers:list',
+  customProvidersSave: 'custom-providers:save',
+  customProvidersRemove: 'custom-providers:remove',
+  customProvidersTest: 'custom-providers:test-connection'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -200,11 +204,60 @@ export interface ProviderChoice {
 /** The agent's permission mode, as gentle-pi persists it. */
 export type AgentPermissionMode = 'normal' | 'auto' | 'yolo' | 'super-yolo'
 
+/** One custom provider as the setup form submits it. The key is validated here and then handed to the login flow; it is never persisted into models.json. */
+export interface CustomProviderInput {
+  id: string
+  name: string
+  /** The user's words for it: server address, never "base URL". */
+  serverAddress: string
+  models: string[]
+  apiKey: string
+}
+
+/** One custom provider as stored on disk, without secrets. */
+export interface StoredCustomProvider {
+  id: string
+  name: string
+  serverAddress: string
+  models: string[]
+}
+
+/** Which field a refused save is about, so the message can sit next to it. */
+export type CustomProviderField = 'id' | 'name' | 'serverAddress' | 'models' | 'apiKey'
+
+/** Every failure is a value the renderer can show; nothing rejects with a raw stack. */
+export type CustomProviderResult =
+  | { ok: true }
+  | { ok: false; error: string; field?: CustomProviderField }
+
+export interface ConnectionTestInput {
+  serverAddress: string
+  apiKey: string
+}
+
+/**
+ * Outcome of the automatic key check. Many compatible servers do not implement the
+ * endpoint this check uses, so "could not check automatically" is its own answer, never
+ * mistaken for a wrong key.
+ */
+export type ConnectionTestStatus = 'reachable' | 'key_rejected' | 'could_not_check' | 'no_answer'
+
+export interface ConnectionTestResult {
+  status: ConnectionTestStatus
+  message: string
+}
+
 export type AuthMethod = 'oauth' | 'api_key'
 
 export interface AuthLoginRequest {
   providerId: string
   type: AuthMethod
+  /**
+   * A key the user already typed (custom provider form). When present, the first secret
+   * prompt pi asks is answered with it instead of being shown again. It lives in memory
+   * for the length of the login call and is persisted only by pi's own credential store.
+   */
+  apiKey?: string
 }
 
 export type AuthLoginResult = { ok: true } | { ok: false; error: string; cancelled?: boolean }
@@ -270,5 +323,12 @@ export interface GentleApi {
     answerPrompt: (requestId: string, value: string | null) => void
     onPrompt: (listener: (request: AuthPromptRequest) => void) => () => void
     onEvent: (listener: (envelope: AuthEventEnvelope) => void) => () => void
+  }
+  /** Custom providers written to the engine's own models.json (S16). */
+  customProviders: {
+    list: () => Promise<StoredCustomProvider[]>
+    save: (input: CustomProviderInput) => Promise<CustomProviderResult>
+    remove: (id: string) => Promise<CustomProviderResult>
+    testConnection: (input: ConnectionTestInput) => Promise<ConnectionTestResult>
   }
 }
