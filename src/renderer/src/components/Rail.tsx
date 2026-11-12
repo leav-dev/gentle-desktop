@@ -1,4 +1,5 @@
 import type {
+  ActiveProfile,
   AgentPermissionMode,
   HostStatus,
   OddTaskFeature,
@@ -138,7 +139,7 @@ function StatusSection({
   repo,
   sessionName,
   integrations,
-  profiles
+  activeProfile
 }: {
   phase: HostStatus['phase']
   restarts: number
@@ -147,7 +148,7 @@ function StatusSection({
   repo: RepoStatus | null
   sessionName: string | null
   integrations: readonly { key: string; text: string }[]
-  profiles: readonly { name: string; agents: number }[]
+  activeProfile: ActiveProfile | null
 }): React.JSX.Element {
   const dirty = repo !== null && repo.dirtyCount > 0
   const healthy = phase === 'ready'
@@ -194,16 +195,14 @@ function StatusSection({
           ))}
         </>
       ) : null}
-      {profiles.length > 0 ? (
+      {/* Only the active profile, and only its name: the list of profiles the session is
+          not using belongs to the command that switches them. */}
+      {activeProfile !== null ? (
         <>
-          <p className="rail-subhead">Profiles</p>
-          {profiles.map((profile) => (
-            <p key={profile.name}>
-              <span className="task">{profile.name}</span>
-              <span className="meta">{profile.agents} agents</span>
-            </p>
-          ))}
-          <p className="fold">and more: /gentle:profiles</p>
+          <p className="rail-subhead">Profile</p>
+          <p>
+            <span className="task">{activeProfile.name}</span>
+          </p>
         </>
       ) : null}
       {/* Only the count: a list of paths is noise in a status panel. */}
@@ -220,7 +219,7 @@ export function Rail({
   tasks,
   activity,
   integrations,
-  profiles,
+  activeProfile,
   status,
   permissionMode,
   stats,
@@ -230,14 +229,14 @@ export function Rail({
   tasks: readonly OddTaskFeature[]
   activity: AgentActivity
   integrations: readonly { key: string; text: string }[]
-  profiles: readonly { name: string; agents: number }[]
+  activeProfile: ActiveProfile | null
   status: HostStatus
   permissionMode: AgentPermissionMode
   stats: SessionStats | null
   repo: RepoStatus | null
   sessionName: string | null
 }): React.JSX.Element {
-  const sections = visibleRailSections({ tasks, activity, repo, sessionName, integrations, profiles })
+  const sections = visibleRailSections({ tasks, activity, repo, sessionName })
   return (
     <aside className="rail" aria-label="Session rail">
       {sections.includes('status') ? (
@@ -249,7 +248,7 @@ export function Rail({
           repo={repo}
           sessionName={sessionName}
           integrations={integrations}
-          profiles={profiles}
+          activeProfile={activeProfile}
         />
       ) : null}
       {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}

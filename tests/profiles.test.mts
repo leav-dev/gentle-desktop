@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { parseProfiles, readProfiles } from '../src/main/profiles.ts'
+import { parseProfiles, readProfiles, resolveActiveProfile } from '../src/main/profiles.ts'
 import { visibleRailSections } from '../src/renderer/src/state/railSections.ts'
 
 const RAW = JSON.stringify({
@@ -71,4 +71,54 @@ test('Status is first even when every other section is empty', () => {
   })
 
   assert.deepEqual(sections, ['status'])
+})
+
+
+function homeWithProfiles(profiles: object): string {
+  const home = mkdtempSync(join(tmpdir(), 'gentle-desktop-active-profile-'))
+  writeFileSync(join(home, 'profiles.json'), JSON.stringify({ kind: 'x', version: 1, profiles }))
+  return home
+}
+
+test('an explicit record wins over any model match', () => {
+  const home = homeWithProfiles({
+    current: { profile: 'base' },
+    base: { orchestrator: { model: 'nan/other' } },
+    nan_builders: { orchestrator: { model: 'nan/deepseek-v4-flash' } }
+  })
+
+  assert.deepEqual(resolveActiveProfile(home, 'nan/deepseek-v4-flash'), { name: 'base' })
+})
+
+test('the profile whose orchestrator model matches the session is the active one', () => {
+  const home = homeWithProfiles({
+    current: {},
+    base: { orchestrator: { model: 'opencode-go/deepseek-v4-flash' } },
+    nan_builders: { orchestrator: { model: 'nan/deepseek-v4-flash' } }
+  })
+
+  assert.deepEqual(resolveActiveProfile(home, 'nan/deepseek-v4-flash'), { name: 'nan_builders' })
+})
+
+test('two profiles matching the same model resolve to nothing', () => {
+  const home = homeWithProfiles({
+    current: {},
+    a: { orchestrator: { model: 'nan/deepseek-v4-flash' } },
+    b: { orchestrator: { model: 'nan/deepseek-v4-flash' } }
+  })
+
+  assert.equal(
+    resolveActiveProfile(home, 'nan/deepseek-v4-flash'),
+    null,
+    'a wrong label would describe a session it does not match'
+  )
+})
+
+test('no match, no model and no file all resolve to nothing', () => {
+  const home = homeWithProfiles({ current: {}, base: { orchestrator: { model: 'a/b' } } })
+
+  assert.equal(resolveActiveProfile(home, 'x/y'), null)
+  assert.equal(resolveActiveProfile(home, null), null)
+  assert.equal(resolveActiveProfile(join(home, 'missing'), 'a/b'), null)
+  assert.equal(resolveActiveProfile(home, ''), null)
 })

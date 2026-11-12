@@ -69,6 +69,11 @@ S14. Surfaces the terminal shows as floating windows are floating overlays in th
     inventing its own modal. User's words: "y las ventanas flotantes con las que cuenta
     gentel shell".
 
+S15. Assistant output renders as the terminal renders it: Markdown becomes real emphasis,
+    code, lists and headings, and fenced code is highlighted, instead of appearing as literal
+    markup. User input is never interpreted. User's words: "veo outpus con dobles asteriscos
+    pero no veo el resaltado que se maneja en la terminal".
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
@@ -113,6 +118,8 @@ T28. [x] Close the gaps that removing the status bar opened: extension notificat
 T31. [x] Read subscription usage from the provider's own quota endpoint with the credential
     pi already stored, so the top bar can show it. — S11
 T35. [x] Render subscription usage and the `sub` billing marker in the top bar. — S11
+T56. Render assistant output as Markdown: parser, React renderer without raw HTML, and a
+    small fenced-code highlighter. User text stays literal. — S15
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
@@ -247,6 +254,10 @@ L16. User requirement, verbatim: "se requiere que se soporten comando y las vent
     flotantes con las que cuenta gentel shell para respetar lo mas posible la experiencia de
     gentle shell". Commands come from `get_commands` and run through `prompt "/<name>"`;
     floating windows follow the terminal's card chrome in `lib/shell-card.ts`.
+
+L17. User report, verbatim: "sigue sin pertar los estilos, veo outpus con dobles asteriscos
+    pero noveo el resaltado que se maneja en la teminal". The transcript renders model output
+    as plain text, so Markdown reaches the user as markup.
 
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in

@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   IPC,
+  type ActiveProfile,
   type AgentPermissionMode,
   type AuthEventEnvelope,
   type AuthLoginRequest,
@@ -61,7 +62,9 @@ const api: GentleApi = {
       ipcRenderer.invoke(IPC.usageRead, providerId) as Promise<SubscriptionUsage | null>
   },
   profiles: {
-    read: () => ipcRenderer.invoke(IPC.profilesRead) as Promise<ProfileSummary[]>
+    read: () => ipcRenderer.invoke(IPC.profilesRead) as Promise<ProfileSummary[]>,
+    active: (modelKey: string | null) =>
+      ipcRenderer.invoke(IPC.profilesActive, modelKey) as Promise<ActiveProfile | null>
   },
   auth: {
     providers: () => ipcRenderer.invoke(IPC.authProviders) as Promise<ProviderChoice[]>,

@@ -3,8 +3,8 @@ import type { DialogRequest, ExtensionUiRequest, RpcEvent, SessionState } from '
 import type {
   AgentPermissionMode,
   HostStatus,
+  ActiveProfile,
   OddTaskFeature,
-  ProfileSummary,
   RepoStatus,
   SessionStats,
   SubscriptionUsage
@@ -82,8 +82,8 @@ export interface EngineView {
   notice: AgentNotice | null
   /** One row per extension that reported a status, keyed by its status key. */
   integrations: IntegrationStatus[]
-  /** Agent model profiles found on disk, without a selection marker. */
-  profiles: ProfileSummary[]
+  /** The profile this session runs under, when it can be resolved. */
+  activeProfile: ActiveProfile | null
   send: (message: string) => void
   dismissNotice: () => void
   switchSession: (sessionPath: string) => void
@@ -109,7 +109,7 @@ export function useEngine(): EngineView {
   const [stats, setStats] = useState<SessionStats | null>(null)
   const [notice, setNotice] = useState<AgentNotice | null>(null)
   const [integrations, setIntegrations] = useState<IntegrationStatus[]>([])
-  const [profiles, setProfiles] = useState<ProfileSummary[]>([])
+  const [activeProfile, setActiveProfile] = useState<ActiveProfile | null>(null)
   const [usage, setUsage] = useState<SubscriptionUsage | null>(null)
   const activeModel = useRef<{ provider: string; id: string } | null>(null)
   const notifySeq = useRef(0)
@@ -132,7 +132,12 @@ export function useEngine(): EngineView {
     const model = activeModel.current
     if (model !== null) {
       void window.gentle.usage.read(model.provider).then(setUsage).catch(() => {})
-    void window.gentle.profiles.read().then(setProfiles).catch(() => {})
+    // One profile, the active one: a list of names the session is not using is noise.
+    const active = activeModel.current
+    void window.gentle.profiles
+      .active(active === null ? null : `${active.provider}/${active.id}`)
+      .then(setActiveProfile)
+      .catch(() => {})
     }
   }, [])
 
@@ -269,7 +274,7 @@ export function useEngine(): EngineView {
     usage,
     notice,
     integrations,
-    profiles,
+    activeProfile,
     dismissNotice,
     sessionName: sessionState?.sessionName ?? null,
     sessionPath: sessionState?.sessionFile ?? null,

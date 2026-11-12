@@ -38,14 +38,17 @@ and never carries the only signal for an action.
 
 ## Typography
 
-| Role | Stack |
-| --- | --- |
-| Chrome, transcript, code | `ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace` |
-| Long-form prose inside messages | `ui-sans-serif, system-ui, "Segoe UI", sans-serif` |
+**One typeface for the whole application**, exposed as the `--font` token:
 
-Scale: `12px` meta, `13px` chrome, `14px` body, `15px` section titles. Line height `1.55`
-for prose, single-row `1.25` for chrome rows. Bold is semantic: section titles, mode badges
-and the brand petal. Dim is metadata only.
+`ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace`
+
+There is no second stack and no per-surface override — not for prose, not for dialogs, not
+for the setup window. A different family anywhere reads as an accident, and the terminal it
+mirrors has exactly one.
+
+Scale: `11px` micro labels, `12px` meta, `13px` chrome and body, `15px` section titles.
+Line height `1.55` for prose, `1.25` for single-row chrome. Bold is semantic: section titles,
+mode badges and the brand petal. Dim is metadata only.
 
 ## Spacing and radius
 
@@ -60,8 +63,8 @@ and the brand petal. Dim is metadata only.
 The transcript mirrors the terminal, which is the reason this section exists: without it,
 each attempt reinvented the styling.
 
-- **Everything is monospaced**, including assistant prose. There is no sans stack in the
-  transcript; the sans line in Typography is for docs, not chat.
+- **Everything is monospaced**, including assistant prose: the transcript uses the single
+  application typeface, never a second stack.
 - **Assistant text is plain text**: no bubble, no border, no card, no avatar. It fills the
   conversation column.
 - **User messages** are a `--user-bg` block with `› ` in `--accent` as their prefix, and the

@@ -41,7 +41,8 @@ export const IPC = {
   authAnswer: 'auth:answer',
   agentMode: 'agent:mode',
   usageRead: 'usage:read',
-  profilesRead: 'profiles:read'
+  profilesRead: 'profiles:read',
+  profilesActive: 'profiles:active'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -130,6 +131,11 @@ export interface ProfileSummary {
   name: string
   /** How many agents the profile sets a model for. */
   agents: number
+}
+
+/** The profile the current session runs under, when it can be resolved. */
+export interface ActiveProfile {
+  name: string
 }
 
 /** One metered model of a subscription, as the provider reports it. */
@@ -254,6 +260,7 @@ export interface GentleApi {
   }
   profiles: {
     read: () => Promise<ProfileSummary[]>
+    active: (modelKey: string | null) => Promise<ActiveProfile | null>
   }
   auth: {
     providers: () => Promise<ProviderChoice[]>

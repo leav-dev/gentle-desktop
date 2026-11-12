@@ -6,9 +6,17 @@ import type { CommandChoice } from '../../../shared/ipc.ts'
  */
 
 /**
+ * Skills are registered as commands by the engine (`skill:<name>`). They are not actions a
+ * user reaches for while looking at an unfiltered list — the terminal keeps them in their own
+ * group — so the default palette leaves them out. They stay discoverable: any query that
+ * matches one brings it back, including typing `skill`.
+ */
+const SKILL_PREFIX = 'skill:'
+
+/**
  * Filters and ranks commands for the palette.
  *
- * - an empty query returns every command in engine order;
+ * - an empty query returns every command in engine order, except skills;
  * - matching is a case-insensitive substring on name and description;
  * - a name match ranks above a description-only match, ties keep engine order;
  * - a command whose description is absent never throws and can still match by name;
@@ -16,7 +24,9 @@ import type { CommandChoice } from '../../../shared/ipc.ts'
  */
 export function filterCommands(commands: readonly CommandChoice[], rawQuery: string): CommandChoice[] {
   const query = rawQuery.replace(/^\//, '').trim().toLowerCase()
-  if (query.length === 0) return [...commands]
+  if (query.length === 0) {
+    return commands.filter((command) => !command.name.toLowerCase().startsWith(SKILL_PREFIX))
+  }
 
   const byName: CommandChoice[] = []
   const byDescription: CommandChoice[] = []

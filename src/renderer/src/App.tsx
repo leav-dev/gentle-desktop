@@ -224,7 +224,7 @@ export function App(): React.JSX.Element {
           tasks={engine.oddTasks}
           activity={engine.activity}
           integrations={engine.integrations}
-          profiles={engine.profiles}
+          activeProfile={engine.activeProfile}
           status={engine.status}
           permissionMode={engine.permissionMode}
           stats={engine.stats}
@@ -237,7 +237,7 @@ export function App(): React.JSX.Element {
               tasks={engine.oddTasks}
               activity={engine.activity}
               integrations={engine.integrations}
-              profiles={engine.profiles}
+              activeProfile={engine.activeProfile}
               status={engine.status}
               permissionMode={engine.permissionMode}
               stats={engine.stats}

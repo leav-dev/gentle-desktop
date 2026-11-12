@@ -58,3 +58,25 @@ test('a slash mid-text does not open the palette', () => {
   assert.equal(shouldOpenPalette('', 'a/b'), false)
   assert.equal(shouldOpenPalette('/review', '/review more'), false)
 })
+
+
+test('skills stay out of the unfiltered list but a query brings them back', () => {
+  const commands = [
+    { name: 'gentle:status', description: 'Show status' },
+    { name: 'skill:gentle-ai-skill-registry', description: 'Index available skills' },
+    { name: 'skill:gentle-ai', description: 'Harness discipline' }
+  ]
+
+  assert.deepEqual(
+    filterCommands(commands, '').map((command) => command.name),
+    ['gentle:status'],
+    'an unfiltered palette is not a wall of skills'
+  )
+  assert.deepEqual(
+    filterCommands(commands, 'registry').map((command) => command.name),
+    ['skill:gentle-ai-skill-registry'],
+    'a specific query still finds the skill'
+  )
+  assert.equal(filterCommands(commands, 'skill').length, 2, 'typing skill lists them')
+  assert.deepEqual(filterCommands(commands, '/skill').length, 2, 'the handed-over draft keeps its slash')
+})
