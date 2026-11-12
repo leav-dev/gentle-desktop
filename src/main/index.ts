@@ -251,6 +251,12 @@ function createWindow(): BrowserWindow {
   return window
 }
 
+// Windows identifies an application by this id: without it, the window groups under
+// Electron, notifications carry Electron's name and icon, and pinning the app to the taskbar
+// pins the wrong thing. It must match `appId` in electron-builder.yml, which is what the
+// installer registers; the two strings are the only copy of this identity.
+app.setAppUserModelId('dev.gentledesktop.app')
+
 app.whenReady().then(() => {
   host = createHost()
   registerIpc(host)

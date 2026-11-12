@@ -1,0 +1,56 @@
+name: CI
+
+# Runs on every push to main and on every pull request aimed at it. The point is that main
+# is never taken on trust: whoever merges sees the same three checks the machine that built
+# it saw.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Read-only: this workflow proves the tree, it does not publish anything.
+permissions:
+  contents: read
+
+# A second push to the same branch cancels the first run; nobody needs the older answer.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI never launches Electron — it typechecks, tests and bundles. Skipping the binary
+  # download keeps the install step out of the one place that fails most often on runners.
+  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+jobs:
+  verify:
+    name: typecheck, tests, build
+    # Windows on purpose: it is the platform this fork ships to, and the defects that
+    # have actually reached the user — a corrupt asar, CRLF files, a privilege-gated
+    # build — were platform defects. A green Linux run would have said less.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Quoted on purpose: PowerShell does not expand the glob, and Node does.
+      - name: Tests
+        run: node --test "tests/*.test.mts"
+
+      - name: Build
+        run: pnpm build

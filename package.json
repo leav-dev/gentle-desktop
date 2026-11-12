@@ -35,5 +35,9 @@
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   },
-  "author": "Gentle Desktop contributors"
+  "author": {
+    "name": "Gentle Desktop contributors",
+    "url": "https://github.com/leav-dev/gentle-desktop"
+  },
+  "homepage": "https://github.com/leav-dev/gentle-desktop"
 }

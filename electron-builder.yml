@@ -27,8 +27,21 @@ win:
   signAndEditExecutable: false
 
 nsis:
+  # Per-user install: no administrator prompt, no UAC, nothing to escalate. Someone who has
+  # never installed a developer tool should be able to double-click and be done.
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
+  # Registered where a Windows user actually looks: a named entry at the top level of the
+  # Start menu, a desktop shortcut, and one row in Apps & features under this name.
+  createStartMenuShortcut: true
+  createDesktopShortcut: true
+  shortcutName: Gentle Desktop
+  menuCategory: false
+  uninstallDisplayName: Gentle Desktop
+  runAfterFinish: true
+  # Sessions, settings and credentials live in the agent directory, not here; uninstalling
+  # must not decide for the user that their history is disposable.
   deleteAppDataOnUninstall: false
 
 mac:
