@@ -4,6 +4,18 @@ directories:
   output: release
   buildResources: build
 
+# What goes into the package. electron-builder ignores the default output directory by
+# itself, but not a second one: building into release-nsis once packed the whole previous
+# build into the app and produced an 832 MB installer instead of 284 MB. These entries make
+# every build output and every development artifact safe to have lying around.
+files:
+  - "!release/**"
+  - "!release-*/**"
+  - "!tests/**"
+  - "!design/**"
+  - "!odd/**"
+  - "!.github/**"
+
 # The engine is spawned as a script by Electron's own Node, so the two runtime packages
 # must live outside the asar archive to be readable by a child process.
 asarUnpack:
