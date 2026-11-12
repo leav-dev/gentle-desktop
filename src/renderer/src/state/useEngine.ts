@@ -3,6 +3,7 @@ import type { DialogRequest, ExtensionUiRequest, RpcEvent, SessionState } from '
 import type { HostStatus } from '../../../shared/ipc.ts'
 import {
   appendUserMessage,
+  hydrateTranscript,
   initialTranscriptState,
   reduceTranscript,
   type TranscriptState
@@ -13,6 +14,7 @@ type TranscriptAction =
   | { kind: 'event'; event: RpcEvent }
   | { kind: 'user'; text: string }
   | { kind: 'reset' }
+  | { kind: 'hydrate'; messages: readonly unknown[] }
 
 /** Bridges the pure transcript reducer to useReducer's action shape. */
 function transcriptReducer(state: TranscriptState, action: TranscriptAction): TranscriptState {
@@ -23,6 +25,8 @@ function transcriptReducer(state: TranscriptState, action: TranscriptAction): Tr
       return appendUserMessage(state, action.text)
     case 'reset':
       return initialTranscriptState()
+    case 'hydrate':
+      return hydrateTranscript(action.messages)
   }
 }
 
@@ -38,6 +42,7 @@ export interface EngineView {
   activeDialog: DialogRequest | null
   notice: ExtensionUiRequest | null
   send: (message: string) => void
+  switchSession: (sessionPath: string) => void
   abort: () => void
   newSession: () => void
   answerDialog: (request: DialogRequest, answer: DialogAnswer) => void
@@ -102,6 +107,15 @@ export function useEngine(): EngineView {
     void window.gentle.session.abort().catch(() => {})
   }, [])
 
+  const loadHistory = useCallback(() => {
+    void window.gentle.session
+      .messages()
+      .then((messages) => dispatch({ kind: 'hydrate', messages }))
+      .catch(() => {
+        // An unreadable history leaves the transcript empty; the session itself is fine.
+      })
+  }, [])
+
   const newSession = useCallback(() => {
     dispatch({ kind: 'reset' })
     void window.gentle.session
@@ -110,6 +124,22 @@ export function useEngine(): EngineView {
       .then((state) => setSessionState(state))
       .catch(() => {})
   }, [])
+
+  // Reopening a saved conversation must show it, not an empty pane.
+  const switchSession = useCallback(
+    (sessionPath: string) => {
+      dispatch({ kind: 'reset' })
+      void window.gentle.sessions
+        .switchTo(sessionPath)
+        .then(() => window.gentle.session.state())
+        .then((state) => {
+          setSessionState(state)
+          loadHistory()
+        })
+        .catch(() => {})
+    },
+    [loadHistory]
+  )
 
   const answerDialog = useCallback((request: DialogRequest, answer: DialogAnswer) => {
     const response = buildDialogResponse(request, answer)
@@ -130,6 +160,7 @@ export function useEngine(): EngineView {
     send,
     abort,
     newSession,
+    switchSession,
     answerDialog
   }
 }

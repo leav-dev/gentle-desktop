@@ -58,16 +58,17 @@ T2. [x] Spawn and supervise the `pi --mode rpc` child with gentle-pi's extension
     restart on crash. Done in 6497cc5. — S1, S6
 T3. [x] Bridge main to renderer: contextIsolation-safe preload API for session create, prompt,
     abort, and event subscription. Done in 6497cc5. — S5.1
-T4. Session list and creation, persisted and reopenable. Commit 3. — S5.1
-T5. Chat transcript with streamed assistant text and tool-call cards including inline
-    diffs. Commit 4. — S5.1, S5.2
-T6. Native dialogs for `ask_user_question` / `ask_user_choice`, multi-question and
-    multiSelect, with cancellation. Commit 5. — S5.3
-T7. Permission and review-consent prompts rendered and answered from the app. Commit 5.
-    — S5.4
-T9. First-run setup: detect an already configured provider with the non-interactive
+T4. [x] Session list, creation and reopen, with the saved conversation hydrated into
+    the transcript. — S5.1
+T5. [x] Chat transcript with streamed assistant text and tool-call cards including inline
+    diffs. Done in 6639da3. — S5.1, S5.2
+T6. [x] Native dialogs for `ask_user_question` / `ask_user_choice`, multi-question and
+    multiSelect, with cancellation. Done in 6639da3. — S5.3
+T7. [x] Permission and review-consent prompts rendered and answered from the app; they
+    reuse the dialog pipeline. Done in 6639da3. — S5.4
+T9. [x] First-run setup: detect an already configured provider with the non-interactive
     readiness check, and otherwise drive provider registration from a configuration window
-    with no visible terminal. Commit 7. — S8, S9
+    with no visible terminal. — S8, S9
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
     that never asks for a terminal command. Commit 8. — S1, S6
 T8. Packaging: installers for Windows and macOS, MIT license and attribution, README that
@@ -80,6 +81,23 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
 - E3 `tests/engine.test.mts` spawns the real engine, gets a session identity from
   `get_state`, and asserts that `get_commands` contains gentle-pi commands — proof that the
   extensions load inside pi as an interactive RPC host.
+- E5 `pi auth login` refuses to run without a TTY (`terminal.interactive` gate), so the
+  CLI path cannot serve the app. The SDK behind it accepts an `AuthInteraction`, and a
+  probe confirmed `login(provider, "api_key", interaction)` completes offline, asks its
+  questions through the interaction, and writes `<home>/auth.json` with mode 0600.
+  Provider registration therefore needs no PTY — the app asks the same questions in a
+  window, and pi keeps custody of the credential.
+- E6 `setRuntimeApiKey` is memory-only and does not persist; persistence goes through
+  `login`. Pinned by `tests/auth.test.mts`.
+- E7 Importing pi's SDK root in a headless process is safe even though it re-exports
+  terminal UI modules: `tests/auth.test.mts` builds a runtime and reads the provider
+  catalogue with no terminal attached.
+- E8 A defect surfaced during verification and is now pinned: `ModelRuntime.create` with
+  `refreshOnCreate: false` reports stored credentials as unconfigured, because the
+  create-time refresh is what builds the status snapshot. Measured on the same `auth.json`:
+  disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
+  with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
+  launch after a successful sign-in.
 - E4 `tests/launch.test.mts` pins the launch contract: `--mode rpc`, the interactive host
   flag, the owned agent home, single-load extension injection, and take-over mode.
 
@@ -112,6 +130,12 @@ L9. Evidence: `pi auth check --provider <p> --json` reports `ready`/`not_ready`/
     with exit codes 0/1/2 and needs no TTY, so the app can detect readiness itself;
     `pi auth login` is documented as requiring an interactive terminal, which the app must
     satisfy behind its own window. Credentials live in `<agent-dir>/auth.json`.
+
+L10. Decision: provider registration uses pi's SDK `login` with an `AuthInteraction`
+    implemented as GUI prompts (text, secret, select, manual_code) plus rendered
+    `auth_url`/`device_code` events. No PTY, no credential handling by the app, OAuth stays
+    available. Rejected: an embedded terminal (needs node-pty and still shows a terminal),
+    and requiring a pre-configured pi (excludes the audience in S6).
 
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in

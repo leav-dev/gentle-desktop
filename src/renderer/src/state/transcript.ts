@@ -252,3 +252,111 @@ export function appendUserMessage(state: TranscriptState, text: string): Transcr
   const item: UserMessageItem = { kind: 'user', id: `user-${state.seq}`, text }
   return { ...state, seq: state.seq + 1, items: [...state.items, item] }
 }
+
+// ---------------------------------------------------------------------------
+// History hydration
+// ---------------------------------------------------------------------------
+
+function textFromContent(content: unknown): string {
+  if (typeof content === 'string') return content
+  if (!Array.isArray(content)) return ''
+
+  const parts: string[] = []
+  for (const block of content) {
+    if (typeof block === 'string') {
+      parts.push(block)
+      continue
+    }
+    if (typeof block === 'object' && block !== null) {
+      const candidate = block as { type?: unknown; text?: unknown }
+      if (candidate.type === 'text' && typeof candidate.text === 'string') parts.push(candidate.text)
+    }
+  }
+  return parts.join('\n').trim()
+}
+
+interface HistoricalToolCall {
+  id: string
+  name: string
+  args?: unknown
+}
+
+function toolCallsFromContent(content: unknown): HistoricalToolCall[] {
+  if (!Array.isArray(content)) return []
+
+  const calls: HistoricalToolCall[] = []
+  for (const block of content) {
+    if (typeof block !== 'object' || block === null) continue
+    const candidate = block as { type?: unknown; id?: unknown; name?: unknown; arguments?: unknown }
+    if (candidate.type !== 'toolCall' || typeof candidate.name !== 'string') continue
+    calls.push({
+      id: typeof candidate.id === 'string' ? candidate.id : candidate.name,
+      name: candidate.name,
+      ...(candidate.arguments !== undefined ? { args: candidate.arguments } : {})
+    })
+  }
+  return calls
+}
+
+/**
+ * Rebuilds a transcript from `get_messages`, so reopening a saved session shows the
+ * conversation instead of an empty pane.
+ *
+ * Historical entries are read defensively and by shape: pi's message payload is not the
+ * RPC event stream, and a session written by another version must degrade to fewer items
+ * rather than break the view. Tool results arrive as their own messages, so they are
+ * attached to the call they answer rather than rendered as separate cards.
+ */
+export function hydrateTranscript(messages: readonly unknown[]): TranscriptState {
+  const items: TranscriptItem[] = []
+  let seq = 0
+
+  for (const raw of messages) {
+    if (typeof raw !== 'object' || raw === null) continue
+    const message = raw as { role?: unknown; content?: unknown }
+    const id = `history-${(seq += 1)}`
+
+    if (message.role === 'user') {
+      const text = textFromContent(message.content)
+      if (text.length > 0) items.push({ kind: 'user', id, text })
+      continue
+    }
+
+    if (message.role === 'assistant') {
+      const text = textFromContent(message.content)
+      if (text.length > 0) items.push({ kind: 'assistant-text', id, text, streaming: false })
+
+      for (const call of toolCallsFromContent(message.content)) {
+        items.push({
+          kind: 'tool',
+          id: `${id}-${call.id}`,
+          toolCallId: call.id,
+          toolName: call.name,
+          ...(call.args !== undefined ? { args: call.args } : {}),
+          status: 'done',
+          isError: false
+        })
+      }
+      continue
+    }
+
+    if (message.role === 'toolResult') {
+      const result = raw as { toolCallId?: unknown; isError?: unknown; content?: unknown }
+      const toolCallId = typeof result.toolCallId === 'string' ? result.toolCallId : null
+      if (toolCallId === null) continue
+
+      const index = items.findIndex((item) => item.kind === 'tool' && item.toolCallId === toolCallId)
+      const target = index === -1 ? undefined : items[index]
+      if (!target || target.kind !== 'tool') continue
+
+      items[index] = {
+        ...target,
+        result: result.content,
+        status: result.isError === true ? 'error' : 'done',
+        isError: result.isError === true
+      }
+    }
+  }
+
+  return { items, isStreaming: false, seq, open: { text: new Map(), thinking: new Map() } }
+}

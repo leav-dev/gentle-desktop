@@ -16,6 +16,7 @@
     "test:engine": "node --test tests/engine.test.mts"
   },
   "dependencies": {
+    "@earendil-works/pi-ai": "1.5.2",
     "@earendil-works/pi-coding-agent": "^1.5.2",
     "gentle-pi": "^4.7.0"
   },

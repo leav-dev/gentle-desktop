@@ -5,7 +5,8 @@ import {
   appendUserMessage,
   initialTranscriptState,
   reduceTranscript,
-  type TranscriptItem
+  type TranscriptItem,
+  hydrateTranscript
 } from '../src/renderer/src/state/transcript.ts'
 
 function messageUpdate(assistantMessageEvent: AssistantMessageEvent): RpcEvent {
@@ -227,4 +228,64 @@ test('appendUserMessage adds a user item without touching streaming', () => {
   assert.equal(users.length, 1)
   assert.equal(users[0]!.text, 'fix the bug')
   assert.equal(state.isStreaming, true, 'a user message does not reset the streaming flag')
+})
+
+// --- history hydration -----------------------------------------------------
+
+test('hydrating a saved conversation rebuilds user and assistant turns', () => {
+  const state = hydrateTranscript([
+    { role: 'user', content: 'arreglá el parser' },
+    { role: 'assistant', content: [{ type: 'text', text: 'voy' }] }
+  ])
+
+  assert.deepEqual(
+    state.items.map((item) => item.kind),
+    ['user', 'assistant-text']
+  )
+  assert.deepEqual(
+    state.items.map((item) => (item.kind === 'user' || item.kind === 'assistant-text' ? item.text : '')),
+    ['arreglá el parser', 'voy']
+  )
+  assert.equal(state.isStreaming, false, 'history never renders as streaming')
+})
+
+test('hydrated tool calls are done by default and take the error flag from their result', () => {
+  const state = hydrateTranscript([
+    {
+      role: 'assistant',
+      content: [
+        { type: 'toolCall', id: 'call-1', name: 'read', arguments: { path: 'a.ts' } },
+        { type: 'toolCall', id: 'call-2', name: 'bash', arguments: { command: 'false' } }
+      ]
+    },
+    { role: 'toolResult', toolCallId: 'call-1', content: 'file body', isError: false },
+    { role: 'toolResult', toolCallId: 'call-2', content: 'exit 1', isError: true }
+  ])
+
+  const tools = state.items.filter((item) => item.kind === 'tool')
+  assert.equal(tools.length, 2)
+  assert.deepEqual(
+    tools.map((item) => (item.kind === 'tool' ? [item.toolName, item.status, item.isError] : [])),
+    [
+      ['read', 'done', false],
+      ['bash', 'error', true]
+    ]
+  )
+  assert.deepEqual(
+    tools.map((item) => (item.kind === 'tool' ? item.result : undefined)),
+    ['file body', 'exit 1'],
+    'the result is attached to the call it answers'
+  )
+})
+
+test('hydration ignores shapes it does not understand instead of failing the view', () => {
+  const state = hydrateTranscript([
+    null,
+    'not a message',
+    { role: 'system', content: 'irrelevant' },
+    { role: 'toolResult' },
+    { role: 'user', content: [] }
+  ])
+
+  assert.deepEqual(state.items, [], 'nothing renderable, nothing invented')
 })
