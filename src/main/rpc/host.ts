@@ -115,6 +115,10 @@ export class PiHost {
     await this.#require().request({ type: 'new_session' })
   }
 
+  async switchSession(sessionPath: string): Promise<void> {
+    await this.#require().request({ type: 'switch_session', sessionPath })
+  }
+
   async sessionState(): Promise<SessionState | null> {
     const state = await this.#require().request<SessionState>({ type: 'get_state' })
     this.#streaming = state?.isStreaming === true

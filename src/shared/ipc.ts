@@ -23,6 +23,8 @@ export const IPC = {
   sessionNew: 'session:new',
   sessionState: 'session:get-state',
   sessionMessages: 'session:get-messages',
+  sessionsList: 'sessions:list',
+  sessionsSwitch: 'sessions:switch',
   dialogAnswer: 'dialog:answer'
 } as const
 
@@ -39,6 +41,24 @@ export interface HostStatus {
   restarts: number
 }
 
+/**
+ * A session as the launcher sees it on disk. pi exposes no list-sessions RPC command, so
+ * the main process derives this from pi's own session files.
+ */
+export interface SessionSummary {
+  path: string
+  id: string
+  /** User-assigned name from the latest `session_info` entry, when present. */
+  name: string | null
+  /** First user message, trimmed for a list row. */
+  preview: string | null
+  cwd: string | null
+  /** ISO timestamp of the session header. */
+  timestamp: string | null
+  messageCount: number
+  sizeBytes: number
+}
+
 export interface PromptRequest {
   message: string
 }
@@ -52,6 +72,10 @@ export interface GentleApi {
     onEvent: (listener: (event: RpcEvent) => void) => () => void
     onDialog: (listener: (request: DialogRequest) => void) => () => void
     onNotice: (listener: (request: ExtensionUiRequest) => void) => () => void
+  }
+  sessions: {
+    list: () => Promise<SessionSummary[]>
+    switchTo: (sessionPath: string) => Promise<void>
   }
   session: {
     prompt: (message: string) => Promise<PromptDisposition>

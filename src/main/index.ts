@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { IPC, type HostStatus, type PromptRequest } from '../shared/ipc.ts'
 import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
 import { PiHost } from './rpc/host.ts'
+import { listSessions } from './sessions.ts'
 
 let host: PiHost | null = null
 
@@ -38,6 +39,15 @@ function registerIpc(instance: PiHost): void {
   ipcMain.handle(IPC.sessionState, async () => instance.sessionState())
 
   ipcMain.handle(IPC.sessionMessages, async () => instance.messages())
+
+  ipcMain.handle(IPC.sessionsList, async () => {
+    const home = instance.status().home
+    // Before the first successful spawn there is no home to scan, and an empty list is
+    // the honest answer rather than a filesystem guess.
+    return home ? listSessions(home) : []
+  })
+
+  ipcMain.handle(IPC.sessionsSwitch, async (_event, sessionPath: string) => instance.switchSession(sessionPath))
 
   ipcMain.on(IPC.dialogAnswer, (_event, response: ExtensionUiResponse) => {
     try {

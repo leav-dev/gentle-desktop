@@ -3,7 +3,8 @@ import {
   IPC,
   type GentleApi,
   type HostStatus,
-  type PromptRequest
+  type PromptRequest,
+  type SessionSummary
 } from '../shared/ipc.ts'
 import type {
   DialogRequest,
@@ -35,6 +36,10 @@ const api: GentleApi = {
     onEvent: (listener) => subscribe<RpcEvent>(IPC.hostEvent, listener),
     onDialog: (listener) => subscribe<DialogRequest>(IPC.hostDialog, listener),
     onNotice: (listener) => subscribe<ExtensionUiRequest>(IPC.hostNotice, listener)
+  },
+  sessions: {
+    list: () => ipcRenderer.invoke(IPC.sessionsList) as Promise<SessionSummary[]>,
+    switchTo: (sessionPath) => ipcRenderer.invoke(IPC.sessionsSwitch, sessionPath) as Promise<void>
   },
   session: {
     prompt: (message) =>
