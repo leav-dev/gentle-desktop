@@ -98,6 +98,12 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E9 The packaged build exposed a runtime contract that dev never showed: Electron 33
+  bundles Node 20.18, and pi's bundle imports `node:module`'s `enableCompileCache`, which
+  exists only on Node 22+. The window would open and the engine would die on spawn. The app
+  therefore requires an Electron release that bundles Node 22 or newer, and
+  `scripts/verify-package.mjs` checks that a packaged build actually contains the engine
+  rather than trusting that the installer built.
 - E4 `tests/launch.test.mts` pins the launch contract: `--mode rpc`, the interactive host
   flag, the owned agent home, single-load extension injection, and take-over mode.
 

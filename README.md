@@ -44,8 +44,13 @@ Three consequences worth knowing:
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 22 or newer in development
 - pnpm 10 or newer
+- An Electron release that bundles **Node.js 22 or newer** (Electron 35+; the project pins a
+  current release). This is not cosmetic: pi's bundle imports `node:module`'s
+  `enableCompileCache`, so an older Electron opens the window and then fails to start the
+  engine. Electron runs pi with `ELECTRON_RUN_AS_NODE=1`, which is what makes the installer
+  independent of any Node installed on the user's machine.
 
 ## Run it
 
@@ -77,8 +82,18 @@ contains gentle-pi commands, meaning the extensions loaded inside pi.
 pnpm dist
 ```
 
-Installers land in `release/`. The engine packages are unpacked outside the asar archive
-because they are spawned as scripts.
+Installers land in `release/`. Verify what actually went inside before shipping it:
+
+```bash
+node scripts/verify-package.mjs
+```
+
+It fails when the packaged build is missing the engine, the gentle-pi extensions or the
+renderer bundle — a build can succeed while shipping an app that cannot start an agent.
+
+On Windows, `CSC_IDENTITY_AUTO_DISCOVERY=false pnpm dist` skips code signing. Without that,
+electron-builder extracts its signing toolchain into the user cache and fails when the
+account cannot create symlinks (`Cannot create symbolic link ... privilege required`).
 
 ## Layout
 
