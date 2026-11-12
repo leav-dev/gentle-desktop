@@ -1,13 +1,23 @@
 name: CI
 
 # Three questions, in order: is the tree sound (every push and PR), does it package on each
-# platform (every push), and does the release carry those packages (tags only).
+# platform (tags only), and does the release carry those packages (tags only).
+#
+# Packaging is deliberate: three platforms take runner minutes that teach nothing on a commit
+# nobody is shipping. The cost of that choice is that a broken packaging config is found at
+# release time, so the manual trigger below exists to try it without tagging.
 on:
   push:
     branches: [main]
     tags: ['v*']
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Build the packages without publishing them
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -63,9 +73,10 @@ jobs:
   package:
     name: package (${{ matrix.platform }})
     needs: verify
-    # Pull requests get the checks; only what lands on main earns a packaged build, and one
-    # run per push instead of four is the difference between a usable minute budget and not.
-    if: github.event_name == 'push'
+    # Tags only. A push to main proves the tree; it does not deserve three packaged builds
+    # nobody will download. The manual trigger is the escape hatch for testing packaging
+    # without minting a version.
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.package)
     strategy:
       fail-fast: false
       matrix:
