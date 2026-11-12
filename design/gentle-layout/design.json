@@ -1,0 +1,21 @@
+{
+  "title": "Gentle Desktop layout",
+  "brief": "Replace the app's sidebar layout with one that mirrors the Gentle Shell terminal: petal prompt, work panels, status bar, and no permanent conversation list. For people who never used a terminal but should feel the same tool.",
+  "feature": "odd/tasks/gentle-desktop.md",
+  "artboards": [
+    {
+      "file": "01-terminal-faithful.html",
+      "title": "Terminal faithful",
+      "tradeoff": "Highest fidelity: fixed 50ch rail, header row, panel prompt and one status bar. The rail costs transcript width below 140 columns.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-one-column-work-rows.html",
+      "title": "One column with work rows",
+      "tradeoff": "Keeps the terminal's language without a permanent column: tasks, helpers and changes belong to the turn. Less status always visible.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

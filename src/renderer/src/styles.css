@@ -64,6 +64,9 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Without this the flex child refuses to shrink and the transcript grows past the
+     window instead of scrolling inside it. */
+  min-height: 0;
 }
 
 /* --- status bar ---------------------------------------------------------- */
@@ -410,6 +413,7 @@ body {
 
 .transcript {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px;
   display: flex;

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gentle Desktop — regular mode, one column</title>
+    <style>
+      :root {
+        --bg: #060407;
+        --panel: #100a0f;
+        --user-bg: #2a1523;
+        --text: #f6eff3;
+        --muted: #a78e9b;
+        --dim: #76616b;
+        --accent: #f095c8;
+        --accent-strong: #ffb1dd;
+        --border: #563040;
+        --border-subtle: #2a1720;
+        --success: #b4e7c7;
+        --warning: #f2b86d;
+        --error: #ff718f;
+        --champagne: #e0c27a;
+        --powder-blue: #a9c7ee;
+        --tool-ok-bg: #151316;
+        --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.45;
+        display: grid;
+        grid-template-rows: 1fr auto auto;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .transcript {
+        overflow-y: auto;
+        min-height: 0;
+        padding: 18px 0 8px;
+        width: min(96ch, 100%);
+        margin: 0 auto;
+      }
+      .transcript > * { margin-bottom: 12px; }
+
+      .turn-user {
+        background: var(--user-bg);
+        border-radius: 7px;
+        padding: 8px 12px;
+      }
+      .turn-user::before { content: "› "; color: var(--accent); }
+      .assistant { color: var(--text); }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--tool-ok-bg);
+        overflow: hidden;
+      }
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--champagne);
+        font-size: 12px;
+      }
+      .card-top .meta { color: var(--dim); }
+      .card-body { padding: 6px 10px; color: var(--muted); font-size: 12px; }
+      .add { color: var(--success); }
+      .del { color: var(--error); }
+
+      /* work rows replace the permanent rail: they belong to the turn, not to the window */
+      .work {
+        width: min(96ch, 100%);
+        margin: 0 auto;
+        padding: 0 0 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .work-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 7px;
+        background: var(--panel);
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      .work-row .label { color: var(--muted); }
+      .work-row .items { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .work-row .count { margin-left: auto; color: var(--dim); flex: none; }
+      .run { color: var(--accent); }
+      .ok { color: var(--success); }
+      .warn { color: var(--warning); }
+      .bad { color: var(--error); }
+
+      .prompt {
+        width: min(96ch, 100%);
+        margin: 0 auto 10px;
+        border: 1px solid var(--border);
+        border-top-color: var(--accent-strong);
+        border-radius: 10px;
+        background: var(--panel);
+      }
+      .prompt-rule {
+        display: flex;
+        gap: 8px;
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .petal { color: var(--accent); }
+      .prompt-rule .right { margin-left: auto; color: var(--dim); }
+      .prompt-input { padding: 10px 12px; }
+      .prompt-input em { color: var(--accent); font-style: normal; }
+      .caret {
+        display: inline-block;
+        width: 7px;
+        height: 14px;
+        background: var(--accent);
+        vertical-align: -2px;
+        animation: blink 1.1s steps(2, start) infinite;
+      }
+      @keyframes blink { to { visibility: hidden; } }
+      @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+
+      /* history is a picker, never a permanent column */
+      .history {
+        width: min(96ch, 100%);
+        margin: 0 auto 12px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--panel);
+      }
+      .history h2 {
+        display: flex;
+        justify-content: space-between;
+        margin: 0;
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .history h2 b { color: var(--text); font-weight: 600; }
+      .history p {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin: 0;
+        padding: 5px 12px;
+        font-size: 12px;
+      }
+      .history p.active { background: var(--selection); }
+      .history p .meta { color: var(--dim); flex: none; }
+      .history p .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      footer {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 16px;
+        border-top: 1px solid var(--border-subtle);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      footer b { color: var(--text); font-weight: 600; }
+      .sep { color: var(--border); }
+      .gauge { color: var(--accent); letter-spacing: 0.14em; }
+      .grow { flex: 1; }
+      footer .hint { color: var(--dim); }
+      :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+    </style>
+  </head>
+  <body>
+    <div class="transcript" role="log">
+      <div class="turn-user">the rail should fold away when I am reading, keep it on the right otherwise</div>
+
+      <div class="assistant">
+        I moved the rail's content into work rows that belong to the turn: tasks, jobs and helpers
+        sit above the prompt while they are relevant, and disappear when the turn settles.<br /><br />
+        History is a picker you open with ⌘K instead of a list that lives on screen. Nothing is
+        permanently borrowed from the transcript's width.
+      </div>
+
+      <div class="card">
+        <div class="card-top"><span>❀ edit · src/renderer/src/App.tsx</span><span class="meta">0.4s</span></div>
+        <div class="card-body"><span class="add">+18</span> <span class="del">−41</span> · removed the session sidebar</div>
+      </div>
+
+      <div class="assistant">Typecheck is clean. Open ⌘K to see the saved conversations.</div>
+
+      <div class="history" role="dialog" aria-label="Saved conversations">
+        <h2><b>History</b><span>esc to close</span></h2>
+        <p class="active"><span class="title">Fold the rail at 140 cols</span><span class="meta">12m · 24 msgs</span></p>
+        <p><span class="title">Scrolling in the transcript</span><span class="meta">1h · 9 msgs</span></p>
+        <p><span class="title">Register the nan provider</span><span class="meta">3h · 41 msgs</span></p>
+      </div>
+    </div>
+
+    <div class="work" aria-label="Work in progress">
+      <div class="work-row">
+        <span class="label">tasks</span>
+        <span class="items"><span class="run">◐</span> Fold the rail at 140 cols</span>
+        <span class="count">2/6</span>
+      </div>
+      <div class="work-row">
+        <span class="label">helpers</span>
+        <span class="items"><span class="run">◐</span> map footer data sources</span>
+        <span class="count">1 running</span>
+      </div>
+      <div class="work-row">
+        <span class="label">changes</span>
+        <span class="items">✎ <span class="add">+18</span> <span class="del">−41</span> · 2 files</span>
+        <span class="count">clean</span>
+      </div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-rule">
+        <span class="petal">✿</span>
+        <span>waiting for input</span>
+        <span class="right">⌘K history · ⌥⌘R rail</span>
+      </div>
+      <div class="prompt-input"><em>› </em>and drop the helper row when it finishes<span class="caret"></span></div>
+    </div>
+
+    <footer>
+      <b>main</b><span class="warn">±2</span>
+      <span class="sep">│</span>
+      <span><b>deepseek-v4-flash</b> · medium</span>
+      <span class="sep">│</span>
+      <span>ctx <span class="gauge">▰▰▰▰▱▱▱▱</span> 45%</span>
+      <span class="sep">│</span>
+      <span>$0.42</span>
+      <span class="grow"></span>
+      <span class="hint">⏎ send · ⇧⏎ newline · / commands</span>
+    </footer>
+  </body>
+</html>

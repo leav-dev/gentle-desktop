@@ -177,6 +177,14 @@ L10. Decision: provider registration uses pi's SDK `login` with an `AuthInteract
     available. Rejected: an embedded terminal (needs node-pty and still shows a terminal),
     and requiring a pre-configured pi (excludes the audience in S6).
 
+L12. User feedback, verbatim: "no estoy logrando navegar en la conversacion, no me gusta tener un
+    listado de las deams conversaiones, me gustaria aagrgar un layout como el de la tui de
+    gentleman, la idea es mantener las intrezas tan parecida como se pueda a gentleman, para
+    poder dar la experiencia mas fiel posible". Two responses: the transcript scroll defect is
+    fixed (a flex child that could not shrink, plus auto-scroll that yanked the reader back),
+    and the layout is designed in `design/gentle-layout/` with two directions that follow the
+    terminal's structure and its Gentleman-Cute palette.
+
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in
     `docs/readme-reference.md` and `docs/gentle-agents-activity.md`. The desktop host is
