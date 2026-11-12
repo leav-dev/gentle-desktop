@@ -1,5 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import type { EngineModelRef, HostStatus } from '../../shared/ipc.ts'
+import type { EngineModelRef, HostStatus, SessionStats } from '../../shared/ipc.ts'
 import type {
   DialogRequest,
   ExtensionUiRequest,
@@ -156,6 +156,12 @@ export class PiHost {
   async messages(): Promise<unknown[]> {
     const payload = await this.#require().request<{ messages?: unknown[] }>({ type: 'get_messages' })
     return payload?.messages ?? []
+  }
+
+  /** Passthrough of the engine's `get_session_stats`; typed at the shared contract. */
+  async sessionStats(): Promise<SessionStats | null> {
+    const payload = await this.#require().request<SessionStats | null>({ type: 'get_session_stats' })
+    return payload ?? null
   }
 
   answerDialog(response: ExtensionUiResponse): void {

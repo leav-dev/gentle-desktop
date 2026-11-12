@@ -25,8 +25,11 @@ export const IPC = {
   sessionState: 'session:get-state',
   sessionMessages: 'session:get-messages',
   sessionSetModel: 'session:set-model',
+  sessionStats: 'session:stats',
   sessionsList: 'sessions:list',
   sessionsSwitch: 'sessions:switch',
+  repoStatus: 'repo:status',
+  oddTasks: 'odd:tasks',
   dialogAnswer: 'dialog:answer',
   authProviders: 'auth:providers',
   authConfigured: 'auth:configured',
@@ -70,6 +73,52 @@ export interface SessionSummary {
 
 export interface PromptRequest {
   message: string
+}
+
+/** Working-tree state of the session directory, as the terminal's changes widget shows it. */
+export interface RepoStatus {
+  /** Current branch, or null on a detached head or outside a repository. */
+  branch: string | null
+  dirtyCount: number
+  added: number
+  removed: number
+  files: string[]
+}
+
+/** One `odd/tasks/*.md` feature: its checklist progress and its open items. */
+export interface OddTaskFeature {
+  feature: string
+  done: number
+  total: number
+  open: string[]
+}
+
+/** Totals pi reports for one session; numbers only, unknown fields stay absent. */
+export interface SessionUsageTotals {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+  total: number
+}
+
+export interface SessionContextUsage {
+  tokens: number | null
+  contextWindow: number
+  percent: number | null
+}
+
+/** Passthrough of the engine's `get_session_stats` reply. */
+export interface SessionStats {
+  sessionId?: string
+  sessionFile?: string
+  totalMessages?: number
+  userMessages?: number
+  assistantMessages?: number
+  toolCalls?: number
+  tokens?: SessionUsageTotals
+  cost?: SessionUsageTotals
+  contextUsage?: SessionContextUsage | null
 }
 
 /** One model the running engine can actually use right now. */
@@ -141,7 +190,15 @@ export interface GentleApi {
     state: () => Promise<SessionState | null>
     messages: () => Promise<unknown[]>
     setModel: (provider: string, modelId: string) => Promise<void>
+    stats: () => Promise<SessionStats | null>
     answerDialog: (response: ExtensionUiResponse) => void
+  }
+  /** Session-directory data the engine does not expose over RPC. */
+  repo: {
+    status: () => Promise<RepoStatus>
+  }
+  odd: {
+    tasks: () => Promise<OddTaskFeature[]>
   }
   auth: {
     providers: () => Promise<ProviderChoice[]>

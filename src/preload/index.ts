@@ -7,8 +7,11 @@ import {
   type AuthPromptRequest,
   type GentleApi,
   type HostStatus,
+  type OddTaskFeature,
   type PromptRequest,
   type ProviderChoice,
+  type RepoStatus,
+  type SessionStats,
   type SessionSummary
 } from '../shared/ipc.ts'
 import type {
@@ -68,9 +71,16 @@ const api: GentleApi = {
     messages: () => ipcRenderer.invoke(IPC.sessionMessages) as Promise<unknown[]>,
     setModel: (provider: string, modelId: string) =>
       ipcRenderer.invoke(IPC.sessionSetModel, { provider, modelId }) as Promise<void>,
+    stats: () => ipcRenderer.invoke(IPC.sessionStats) as Promise<SessionStats | null>,
     answerDialog: (response: ExtensionUiResponse) => {
       ipcRenderer.send(IPC.dialogAnswer, response)
     }
+  },
+  repo: {
+    status: () => ipcRenderer.invoke(IPC.repoStatus) as Promise<RepoStatus>
+  },
+  odd: {
+    tasks: () => ipcRenderer.invoke(IPC.oddTasks) as Promise<OddTaskFeature[]>
   }
 }
 

@@ -9,6 +9,8 @@ import {
 import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
 import { AuthPromptBridge } from './auth-bridge.ts'
 import { listProviderChoices, loginProvider, providerConfigured } from './auth.ts'
+import { listOddTasks } from './odd-tasks.ts'
+import { collectRepoStatus, emptyRepoStatus } from './repo.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
 
@@ -79,6 +81,19 @@ function registerIpc(instance: PiHost): void {
   ipcMain.handle(IPC.sessionSetModel, async (_event, request: { provider: string; modelId: string }) =>
     instance.setModel(request.provider, request.modelId)
   )
+
+  ipcMain.handle(IPC.sessionStats, async () => instance.sessionStats())
+
+  ipcMain.handle(IPC.repoStatus, async () => {
+    const cwd = instance.status().cwd
+    // Without a session directory there is nothing to diff; the rail stays empty.
+    return cwd ? collectRepoStatus(cwd) : emptyRepoStatus()
+  })
+
+  ipcMain.handle(IPC.oddTasks, async () => {
+    const cwd = instance.status().cwd
+    return cwd ? listOddTasks(cwd) : []
+  })
 
   ipcMain.handle(IPC.authConfigured, async (_event, providerId: string) => {
     const home = agentHome()
