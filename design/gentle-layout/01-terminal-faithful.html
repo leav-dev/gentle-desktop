@@ -207,6 +207,14 @@
       .warn { color: var(--warning); }
       .bad { color: var(--error); }
       .rail .fold { padding-left: 20px; color: var(--dim); font-size: 12px; }
+      .rail-subhead {
+        color: var(--dim);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-top: 6px;
+        padding-left: 20px;
+      }
       .rail .clean { color: var(--muted); }
 
       :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
@@ -303,29 +311,24 @@
           <p><span class="task"><span class="warn">?</span> approve: write styles.css</span><span class="meta">needs you</span></p>
         </section>
 
-        <section>
-          <h2><b>▾ INTEGRATIONS</b><span>2</span></h2>
-          <p><span class="task">btw ready</span></p>
-          <p><span class="task">auto checks 3 · 12k tokens</span></p>
-        </section>
 
-        <section>
-          <h2><b>▾ PROFILES</b><span>2</span></h2>
-          <p><span class="task">nan_builders</span><span class="meta">13 agents</span></p>
-          <p><span class="task">base</span><span class="meta">1 agent</span></p>
-          <p class="fold">and more: /gentle:profiles</p>
-        </section>
 
-        <!-- Status is the rail's anchor: unlike every other section it is always drawn,
-             because "is the agent healthy, what is it allowed to do, and which session is
-             this" are questions with an answer at all times. -->
+        <!-- Status is the rail's anchor and always comes first: "is the agent healthy, what
+             is it allowed to do, which session is this" are answered at all times.
+             Integrations and Profiles are groups inside it, not sections of their own. -->
         <section class="rail-status">
           <h2><b>▾ STATUS</b><span>ready</span></h2>
           <p><span class="task"><span class="ok">✿</span> engine ready</span><span class="meta">2 restarts</span></p>
           <p><span class="task">permission guarded</span><span class="meta">⌘,</span></p>
           <p><span class="task">Fold the rail at 140 cols</span><span class="meta">24 msgs</span></p>
           <p><span class="task">✎ <span class="add">+42</span> <span class="del">−7</span> · 3 files</span><span class="meta">dirty</span></p>
-          <p class="fold">⌥⏎ opens the review gate</p>
+          <p class="rail-subhead">Integrations</p>
+          <p><span class="task">btw ready</span></p>
+          <p><span class="task">auto checks 3 · 12k tokens</span></p>
+          <p class="rail-subhead">Profiles</p>
+          <p><span class="task">nan_builders</span><span class="meta">13 agents</span></p>
+          <p><span class="task">base</span><span class="meta">1 agent</span></p>
+          <p class="fold">and more: /gentle:profiles</p>
         </section>
       </aside>
     </main>

@@ -94,10 +94,12 @@ and the brand petal. Dim is metadata only.
 - **Changes show a count, never a list.** The Status section states how many files changed
   and the line deltas; individual paths are noise in a status panel and belong to a
   dedicated view, not the chrome.
-- **Rail order** — Tasks → Helpers → Integrations → Profiles → Status. Integrations lists
-  one row per extension that reported a status key; Profiles lists the agent model profiles
-  found on disk with how many agents each configures.
-- **Status is always visible.** It is the rail's only permanent section: engine health,
+- **Rail order** — Status → Tasks → Helpers. Status is always the first section: the
+  session's own state anchors everything read below it.
+- **Integrations and Profiles are groups inside Status**, never sections of their own.
+  Integrations lists one row per extension that reported a status key; Profiles lists the
+  agent model profiles found on disk with how many agents each configures.
+- **Status is always visible and always first.** It is the rail's only permanent section: engine health,
   permission mode, the session identity with its message count, and the working-tree
   changes. These are questions that have an answer at all times, so an empty Status section
   is not a state — it is a defect.

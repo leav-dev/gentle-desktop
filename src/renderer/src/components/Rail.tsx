@@ -110,48 +110,6 @@ function HelpersSection({ activity }: { activity: AgentActivity }): React.JSX.El
   )
 }
 
-function IntegrationsSection({
-  integrations
-}: {
-  integrations: readonly { key: string; text: string }[]
-}): React.JSX.Element {
-  return (
-    <section>
-      <h2>
-        <b>▾ Integrations</b>
-        <span className="count">{integrations.length}</span>
-      </h2>
-      {integrations.map((entry) => (
-        <p key={entry.key}>
-          <span className="task">{entry.text}</span>
-        </p>
-      ))}
-    </section>
-  )
-}
-
-function ProfilesSection({
-  profiles
-}: {
-  profiles: readonly { name: string; agents: number }[]
-}): React.JSX.Element {
-  return (
-    <section>
-      <h2>
-        <b>▾ Profiles</b>
-        <span className="count">{profiles.length}</span>
-      </h2>
-      {profiles.map((profile) => (
-        <p key={profile.name}>
-          <span className="task">{profile.name}</span>
-          <span className="meta">{profile.agents} agents</span>
-        </p>
-      ))}
-      <p className="fold">and more: /gentle:profiles</p>
-    </section>
-  )
-}
-
 const PHASE_LABELS: Record<HostStatus['phase'], string> = {
   ready: 'ready',
   starting: 'starting…',
@@ -178,7 +136,9 @@ function StatusSection({
   permissionMode,
   stats,
   repo,
-  sessionName
+  sessionName,
+  integrations,
+  profiles
 }: {
   phase: HostStatus['phase']
   restarts: number
@@ -186,6 +146,8 @@ function StatusSection({
   stats: SessionStats | null
   repo: RepoStatus | null
   sessionName: string | null
+  integrations: readonly { key: string; text: string }[]
+  profiles: readonly { name: string; agents: number }[]
 }): React.JSX.Element {
   const dirty = repo !== null && repo.dirtyCount > 0
   const healthy = phase === 'ready'
@@ -219,6 +181,30 @@ function StatusSection({
             <span className="add">+{repo.added}</span> <span className="del">−{repo.removed}</span>
           </span>
         </p>
+      ) : null}
+      {/* Integrations and Profiles are groups of the session's state, not sections of their
+          own: they answer "what else is attached to this session" once the basics are read. */}
+      {integrations.length > 0 ? (
+        <>
+          <p className="rail-subhead">Integrations</p>
+          {integrations.map((entry) => (
+            <p key={entry.key}>
+              <span className="task">{entry.text}</span>
+            </p>
+          ))}
+        </>
+      ) : null}
+      {profiles.length > 0 ? (
+        <>
+          <p className="rail-subhead">Profiles</p>
+          {profiles.map((profile) => (
+            <p key={profile.name}>
+              <span className="task">{profile.name}</span>
+              <span className="meta">{profile.agents} agents</span>
+            </p>
+          ))}
+          <p className="fold">and more: /gentle:profiles</p>
+        </>
       ) : null}
       {/* Only the count: a list of paths is noise in a status panel. */}
     </section>
@@ -254,10 +240,6 @@ export function Rail({
   const sections = visibleRailSections({ tasks, activity, repo, sessionName, integrations, profiles })
   return (
     <aside className="rail" aria-label="Session rail">
-      {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}
-      {sections.includes('helpers') ? <HelpersSection activity={activity} /> : null}
-      {sections.includes('integrations') ? <IntegrationsSection integrations={integrations} /> : null}
-      {sections.includes('profiles') ? <ProfilesSection profiles={profiles} /> : null}
       {sections.includes('status') ? (
         <StatusSection
           phase={status.phase}
@@ -266,8 +248,12 @@ export function Rail({
           stats={stats}
           repo={repo}
           sessionName={sessionName}
+          integrations={integrations}
+          profiles={profiles}
         />
       ) : null}
+      {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}
+      {sections.includes('helpers') ? <HelpersSection activity={activity} /> : null}
     </aside>
   )
 }

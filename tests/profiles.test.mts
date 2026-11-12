@@ -47,7 +47,7 @@ test('profiles are read from the given config home', () => {
   assert.equal(readProfiles(home).length, 2)
 })
 
-test('the rail lists integrations and profiles before the permanent Status', () => {
+test('integrations and profiles live inside Status and add no section of their own', () => {
   const sections = visibleRailSections({
     tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
     activity: { counts: { running: 0, queued: 0, waiting: 0, finished: 0 }, tasks: [] },
@@ -57,10 +57,10 @@ test('the rail lists integrations and profiles before the permanent Status', () 
     profiles: [{ name: 'base', agents: 1 }]
   })
 
-  assert.deepEqual(sections, ['tasks', 'integrations', 'profiles', 'status'])
+  assert.deepEqual(sections, ['status', 'tasks'], 'two sections, and the groups stay inside Status')
 })
 
-test('no integrations and no profiles leave no sections, and Status survives', () => {
+test('Status is first even when every other section is empty', () => {
   const sections = visibleRailSections({
     tasks: [],
     activity: { counts: { running: 0, queued: 0, waiting: 0, finished: 0 }, tasks: [] },

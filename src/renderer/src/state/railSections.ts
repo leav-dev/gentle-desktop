@@ -3,7 +3,9 @@ import type { AgentActivity } from './agentActivity.ts'
 
 /**
  * The rail is a preset, fixed list of sections in fixed order:
- * Tasks → Jobs → Helpers → Status (gentle-desktop S11).
+ * Status → Tasks → Jobs → Helpers (gentle-desktop S11). Status is always first, because the
+ * session's own state is the anchor the rest of the panel is read against; Integrations and
+ * Profiles are groups inside it rather than sections of their own.
  *
  * Jobs has no desktop data source yet, so it never appears. A section with nothing to show
  * is not rendered at all — no empty panel, no placeholder row, no zero count — and the
@@ -13,7 +15,7 @@ import type { AgentActivity } from './agentActivity.ts'
  * allowed to do, and which session is this" has an answer at all times. An empty Status
  * section is a defect, not a state.
  */
-export type RailSectionId = 'tasks' | 'helpers' | 'integrations' | 'profiles' | 'status'
+export type RailSectionId = 'status' | 'tasks' | 'helpers'
 
 export interface RailData {
   tasks: readonly OddTaskFeature[]
@@ -31,12 +33,9 @@ export function helpersHaveActivity(activity: AgentActivity): boolean {
 }
 
 export function visibleRailSections(data: RailData): RailSectionId[] {
-  const sections: RailSectionId[] = []
+  // First and always: the session's own state anchors everything read below it.
+  const sections: RailSectionId[] = ['status']
   if (data.tasks.length > 0) sections.push('tasks')
   if (helpersHaveActivity(data.activity)) sections.push('helpers')
-  if ((data.integrations?.length ?? 0) > 0) sections.push('integrations')
-  if ((data.profiles?.length ?? 0) > 0) sections.push('profiles')
-  // Always last, always present: it is the rail's anchor.
-  sections.push('status')
   return sections
 }

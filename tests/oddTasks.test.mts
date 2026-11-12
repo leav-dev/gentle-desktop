@@ -83,7 +83,7 @@ test('an empty task list yields no Tasks section, and sections keep their fixed 
     repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
     sessionName: 'review'
   })
-  assert.deepEqual(withoutTasks, ['helpers', 'status'], 'no Tasks header with a zero count')
+  assert.deepEqual(withoutTasks, ['status', 'helpers'], 'no Tasks header with a zero count')
 
   const withTasks = visibleRailSections({
     tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
@@ -91,5 +91,5 @@ test('an empty task list yields no Tasks section, and sections keep their fixed 
     repo: null,
     sessionName: 'review'
   })
-  assert.deepEqual(withTasks, ['tasks', 'status'], 'no Helpers section when nothing runs')
+  assert.deepEqual(withTasks, ['status', 'tasks'], 'no Helpers section when nothing runs')
 })

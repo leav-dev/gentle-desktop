@@ -1327,3 +1327,13 @@ body {
   background: var(--accent-strong);
   background-clip: content-box;
 }
+
+/* A group inside Status, not a section of its own. */
+.rail-subhead {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 6px;
+  padding-left: 20px;
+}
