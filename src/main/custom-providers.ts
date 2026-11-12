@@ -403,10 +403,17 @@ export async function testConnection(input: ConnectionTestInput): Promise<Connec
       headers: { Authorization: `Bearer ${input.apiKey.trim()}` },
       signal: AbortSignal.timeout(TEST_TIMEOUT_MS)
     })
-  } catch {
+  } catch (error) {
+    // AbortSignal.timeout rejects with a DOMException named TimeoutError, while a dead
+    // address arrives as a plain TypeError, so the two failures can be told apart. A
+    // hung server must be reported as its own outcome, not with the words for a server
+    // that is unreachable.
+    const timedOut = error instanceof Error && error.name === 'TimeoutError'
     return {
       status: 'no_answer',
-      message: 'The server did not answer. Please check the address and your connection, then try again.'
+      message: timedOut
+        ? 'The server took too long to answer, so the check was stopped. Please check the address and try again.'
+        : 'The server did not answer. Please check the address and your connection, then try again.'
     }
   }
 
