@@ -1,4 +1,5 @@
 import type { AssistantTextItem, ThinkingItem, UserMessageItem } from '../state/transcript.ts'
+import { Markdown } from './Markdown.tsx'
 
 export type MessageItem = AssistantTextItem | ThinkingItem | UserMessageItem
 
@@ -27,7 +28,9 @@ export function Message({ item }: { item: MessageItem }): React.JSX.Element {
   }
   return (
     <div className={`message message-assistant${item.streaming ? ' message-streaming' : ''}`}>
-      <p className="message-text">{item.text}</p>
+      {/* The terminal renders model output as Markdown (S15); the parser keeps
+          unclosed markers literal, so a half-streamed document is safe. */}
+      <Markdown text={item.text} />
     </div>
   )
 }
