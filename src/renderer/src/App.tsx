@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CommandPalette } from './components/CommandPalette.tsx'
+import { AgentsView } from './components/AgentsView.tsx'
 import { DialogHost } from './components/DialogHost.tsx'
 import { Header } from './components/Header.tsx'
 import { NoticeToast } from './components/NoticeToast.tsx'
@@ -49,6 +50,7 @@ export function App(): React.JSX.Element {
   // First-run gate: if no provider is configured yet, the setup window opens itself
   // once. The dismissal is remembered for this session only (a plain ref, not storage),
   // so the next launch offers onboarding again until a provider is connected.
+  const [agentsOpen, setAgentsOpen] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
   const autoOpenDone = useRef(false)
   const dismissedThisSession = useRef(false)
@@ -80,12 +82,33 @@ export function App(): React.JSX.Element {
       })
   }, [engine.ready])
 
-  // ⌘K / Ctrl+K opens the picker, ⌘P / Ctrl+P the command palette; pressing an
-  // accelerator again closes its overlay, and the two never stack.
+  // ⌘K / Ctrl+K opens the picker, ⌘P / Ctrl+P the command palette, Alt+A the agents
+  // overlay, ⌘, / Ctrl+, the setup window. Pressing an accelerator again closes its
+  // overlay, and overlays never stack.
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if (!(event.metaKey || event.ctrlKey)) return
       const key = event.key.toLowerCase()
+
+      // Alt+A must be handled before the modifier guard below: it is the terminal's
+      // agents shortcut, and a user who reaches for it expects the same overlay here.
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
+        if (key === 'a') {
+          event.preventDefault()
+          setPaletteOpen(false)
+          setHistoryOpen(false)
+          setAgentsOpen((open) => !open)
+        }
+        return
+      }
+
+      if (!(event.metaKey || event.ctrlKey)) return
+
+      if (key === ',') {
+        event.preventDefault()
+        setWizardOpen(true)
+        return
+      }
+
       if (key === 'k') {
         event.preventDefault()
         setPaletteOpen(false)
@@ -116,6 +139,12 @@ export function App(): React.JSX.Element {
   }, [])
 
   const openHistory = useCallback(() => setHistoryOpen(true), [])
+
+  const openPalette = useCallback(() => {
+    setHistoryOpen(false)
+    setPaletteSeed('')
+    setPaletteOpen(true)
+  }, [])
   const closeHistory = useCallback(() => setHistoryOpen(false), [])
   const closePalette = useCallback(() => setPaletteOpen(false), [])
 
@@ -152,6 +181,9 @@ export function App(): React.JSX.Element {
         stats={engine.stats}
         repo={engine.repo}
         railCollapsed={!railWide}
+        onNewSession={engine.newSession}
+        onOpenCommands={openPalette}
+        onOpenAgents={() => setAgentsOpen((open) => !open)}
         onToggleRail={() => setRailOverlayOpen((open) => !open)}
         onOpenSetup={openWizard}
         onOpenHistory={openHistory}
@@ -190,6 +222,7 @@ export function App(): React.JSX.Element {
       {paletteOpen ? (
         <CommandPalette initialQuery={paletteSeed} onClose={closePalette} onRun={runCommand} />
       ) : null}
+      {agentsOpen ? <AgentsView activity={engine.activity} onClose={() => setAgentsOpen(false)} /> : null}
       {wizardOpen ? <SetupWizard onClose={closeWizard} /> : null}
     </div>
   )

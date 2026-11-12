@@ -63,10 +63,18 @@ and the brand petal. Dim is metadata only.
 - **Agent permission mode** (`🔥 YOLO`, `💥 SUPER-YOLO`) sits on the prompt rule immediately
   after the agent state, because it describes how the agent will act on the next turn. It is
   never a status-bar segment, and it is absent in the default guarded mode.
-- **Top bar** — brand, working directory, branch with `±N`, and on the right: the history
-  affordance, model with effort, context usage gauge with percent, and cost. Everything the
-  window needs to state lives here and nowhere else; nothing is repeated in the rail or the
-  prompt rule.
+- **Top bar** — brand, the project folder name, branch with `±N`, and on the right: the
+  history affordance, model with effort, context usage gauge with percent, subscription usage
+  when the provider reports it, and cost with a `sub` marker on subscription billing.
+  Everything the window needs to state lives here and nowhere else; nothing is repeated in
+  the rail or the prompt rule.
+- **Action row** — a labelled button row directly under the top bar for every overlay and
+  session action: New, History, Commands, Agents, Providers, and Show rail when it is
+  folded. Each button carries its accelerator in dim text beside the label. This row is not
+  optional chrome: it is how someone who has not learned the shortcuts reaches them, and no
+  action may exist only as an accelerator.
+- **Never show a full filesystem path** in the chrome. A folder name identifies the project;
+  the absolute path is a tooltip at most.
 - **There is no status bar.** Every value it used to repeat already has an owner: branch,
   model, context and cost in the top bar, work counts in the rail, and hints on the prompt
   rule. A second row restating them is noise, not information.

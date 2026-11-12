@@ -44,6 +44,17 @@
       "status": "resolved",
       "sentAt": "2026-11-12T02:38:27.300Z",
       "resolvedAt": "2026-11-12T02:41:45.064Z"
+    },
+    {
+      "id": "ghj8wci7",
+      "file": "01-terminal-faithful.html",
+      "selector": "body > header > span:nth-of-type(4) > span:nth-of-type(1)",
+      "excerpt": "⌘K history",
+      "comment": "retiralo",
+      "createdAt": "2026-11-12T03:09:11.290Z",
+      "status": "open",
+      "sentAt": "2026-11-12T03:09:11.359Z",
+      "resolvedAt": null
     }
   ]
 }

@@ -46,8 +46,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 8px 16px;
-        border-bottom: 1px solid var(--border-subtle);
+        padding: 8px 16px 4px;
       }
       .brand { color: var(--accent); }
       .brand b { color: var(--text); font-weight: 600; }
@@ -60,12 +59,30 @@
       /* The context gauge keeps the terminal's cell look: filled and empty blocks. */
       .gauge { color: var(--accent); letter-spacing: 0.14em; }
       header .right .cost { color: var(--text); font-variant-numeric: tabular-nums; }
+      header .right .cost-sub { color: var(--dim); font-size: 11px; }
+      header .right .usage { color: var(--text); }
       .picker-key {
         border: 1px solid var(--border-subtle);
         border-radius: 4px;
         padding: 0 6px;
         color: var(--muted);
       }
+
+      .chrome { border-bottom: 1px solid var(--border-subtle); }
+      .actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 6px; }
+      .action {
+        border: 1px solid var(--border-subtle);
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-size: 12px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .action:hover { border-color: var(--accent); }
+      .action-key { color: var(--dim); font-size: 11px; margin-left: 6px; }
+      .action:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 1px; }
 
       /* --- body --------------------------------------------------------- */
       main {
@@ -196,17 +213,31 @@
     </style>
   </head>
   <body>
+    <div class="chrome">
     <header>
       <span class="brand">✿ <b>gentle desktop</b></span>
-      <span class="path">~/codes/priv/gentle_ia_desktop</span>
+      <span class="path" title="~/codes/priv/gentle_ia_desktop">gentle_ia_desktop</span>
       <span class="branch">main <span class="dirty">±3</span></span>
       <span class="right">
         <span class="picker-key">⌘K history</span>
         <span class="model">deepseek-v4-flash · medium</span>
         <span class="ctx">ctx <span class="gauge">▰▰▰▰▱▱▱▱</span> 45%</span>
-        <span class="cost">$0.42</span>
+        <span class="usage">4h <span class="gauge">▰▰▰▱▱▱▱▱</span> 38%</span>
+        <span class="cost">$0.42 <span class="cost-sub">sub</span></span>
       </span>
     </header>
+
+    <!-- The action row is for people who do not memorize accelerators: every overlay is a
+         labelled button and the shortcut sits beside it, so the keyboard path stays visible
+         instead of hidden. -->
+    <div class="actions" role="toolbar" aria-label="Actions">
+      <button class="action">New</button>
+      <button class="action">History <span class="action-key">⌘K</span></button>
+      <button class="action">Commands <span class="action-key">⌘P</span></button>
+      <button class="action">Agents <span class="action-key">⌥A</span></button>
+      <button class="action">Providers <span class="action-key">⌘,</span></button>
+    </div>
+    </div>
 
     <main>
       <div class="conversation">

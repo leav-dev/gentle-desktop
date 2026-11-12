@@ -1,0 +1,71 @@
+/* Subagent overlay. Kept in its own file: the shell stylesheet is shared and edited often. */
+
+.agents-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
+
+.agents-row {
+  display: grid;
+  grid-template-columns: 2ch minmax(0, 1fr) 12ch minmax(0, 18ch);
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.agents-row:first-child {
+  border-top: 0;
+}
+
+.agents-glyph {
+  color: var(--muted);
+}
+
+.agents-row-running .agents-glyph {
+  color: var(--accent);
+}
+
+.agents-row-waiting .agents-glyph {
+  color: var(--warning);
+}
+
+.agents-row-finished .agents-glyph {
+  color: var(--success);
+}
+
+.agents-row-failed .agents-glyph {
+  color: var(--error);
+}
+
+.agents-label {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agents-kind {
+  color: var(--powder-blue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agents-step {
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agents-empty {
+  margin: 0;
+  padding: 14px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}

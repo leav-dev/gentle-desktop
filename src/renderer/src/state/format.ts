@@ -57,6 +57,23 @@ export function commandKeyLabel(): string {
   return isMac() ? '⌘P commands' : 'Ctrl+P commands'
 }
 
+/** Bare accelerators, for the action row where the button already carries the verb. */
+export function historyShortcut(): string {
+  return isMac() ? '⌘K' : 'Ctrl+K'
+}
+
+export function commandsShortcut(): string {
+  return isMac() ? '⌘P' : 'Ctrl+P'
+}
+
+export function agentsShortcut(): string {
+  return isMac() ? '⌥A' : 'Alt+A'
+}
+
+export function settingsShortcut(): string {
+  return isMac() ? '⌘,' : 'Ctrl+,'
+}
+
 export function relativeTime(timestamp: string | null): string {
   if (!timestamp) return ''
   const parsed = Date.parse(timestamp)

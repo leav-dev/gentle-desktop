@@ -65,8 +65,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 16px 4px;
+  /* The chrome wrapper owns the divider, so the action row sits inside it. */
   white-space: nowrap;
 }
 
@@ -1217,4 +1217,56 @@ body {
 
 .notice-toast-close:hover {
   color: var(--text);
+}
+
+/* --- chrome -----------------------------------------------------------------
+   The action row exists for people who do not memorize accelerators. Every overlay is
+   a labelled button and the shortcut sits beside it, so the keyboard path stays visible
+   instead of hidden. */
+
+.app-chrome {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 6px;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.action-button:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 1px;
+}
+
+.action-label {
+  color: var(--text);
+}
+
+.action-shortcut {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
