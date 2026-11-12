@@ -1,0 +1,12 @@
+allowBuilds:
+  '@google/genai': true
+  electron: true
+  esbuild: true
+  gentle-pi: true
+  protobufjs: true
+onlyBuiltDependencies:
+  - '@google/genai'
+  - electron
+  - esbuild
+  - gentle-pi
+  - protobufjs

@@ -1,0 +1,54 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --bg-panel: #151922;
+  --border: #242a36;
+  --text: #e6e9ef;
+  --text-dim: #8b93a7;
+  --accent: #7c9cff;
+
+  font-family: ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.app-frame {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100%;
+}
+
+.app-sidebar {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+}
+
+.app-conversation {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-placeholder {
+  margin: auto;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}

@@ -1,0 +1,35 @@
+{
+  "name": "gentle-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop host for Gentle Shell — runs the Gentle Shell engine outside a terminal",
+  "license": "MIT",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "dist": "pnpm build && electron-builder",
+    "test": "node --test tests/*.test.mts",
+    "test:unit": "node --test tests/launch.test.mts",
+    "test:engine": "node --test tests/engine.test.mts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^1.5.2",
+    "gentle-pi": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  }
+}
