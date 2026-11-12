@@ -29,20 +29,35 @@ S5. First milestone ("rebanada vertical usable") delivers, and only delivers:
          dialogs, including multi-question and multiSelect forms;
     S5.4 permission and review-consent prompts answerable from the app.
 
-S6. The engine is consumed, not copied: the app launches the published `pi` runtime with
+S6. The app is free and non-commercial, and its purpose is reach: people who are not
+    comfortable with a terminal should get the same engine. User's words: "hacer una
+    version app para las personas no se sienten comodas con la versiond e terminal, no
+    pienso cobrar nada de algo por el estilo, la idea que la herramienta de gentleman
+    llegue a mas personas".
+
+S8. Onboarding belongs to the first milestone: a person who has never opened a terminal
+    must be able to install the app, connect a provider and start a conversation without
+    seeing a terminal. User's words: "Sí, el wizard entra en el hito 1".
+
+S9. Provider registration runs behind the app, driven from a configuration window instead
+    of a visible terminal. User's words: "poder llamr por detras el proceso que se usa
+    poara registrar el proveedor, se puede hacer una ventana que solite su configuracion
+    sintener que mostrar la terminal".
+
+S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
     be expressed as an extension.
 
 ## Tasks
 
-T1. Scaffold the Electron + React + TypeScript project (main / preload / renderer, Vite,
-    dev and build scripts, pnpm). Commit 1. — S4
-T2. Spawn and supervise the `pi --mode rpc` child with gentle-pi's extensions enabled and
+T1. [x] Scaffold the Electron + React + TypeScript project (main / preload / renderer, Vite,
+    dev and build scripts, pnpm). Done in d2c331d. — S4
+T2. [x] Spawn and supervise the `pi --mode rpc` child with gentle-pi's extensions enabled and
     `GENTLE_SHELL_INTERACTIVE_HOST=1`; typed transport with framing, correlation, and
-    restart on crash. Commit 2. — S1, S6
-T3. Bridge main to renderer: contextIsolation-safe preload API for session create, prompt,
-    abort, and event subscription. Commit 2. — S5.1
+    restart on crash. Done in 6497cc5. — S1, S6
+T3. [x] Bridge main to renderer: contextIsolation-safe preload API for session create, prompt,
+    abort, and event subscription. Done in 6497cc5. — S5.1
 T4. Session list and creation, persisted and reopenable. Commit 3. — S5.1
 T5. Chat transcript with streamed assistant text and tool-call cards including inline
     diffs. Commit 4. — S5.1, S5.2
@@ -50,8 +65,23 @@ T6. Native dialogs for `ask_user_question` / `ask_user_choice`, multi-question a
     multiSelect, with cancellation. Commit 5. — S5.3
 T7. Permission and review-consent prompts rendered and answered from the app. Commit 5.
     — S5.4
+T9. First-run setup: detect an already configured provider with the non-interactive
+    readiness check, and otherwise drive provider registration from a configuration window
+    with no visible terminal. Commit 7. — S8, S9
+T10. Distribution: installers a non-technical person can run, plus a short first-run guide
+    that never asks for a terminal command. Commit 8. — S1, S6
 T8. Packaging: installers for Windows and macOS, MIT license and attribution, README that
     documents build, run, and the upstream relationship. Commit 6. — S1, S3
+
+## Evidence
+
+- E1 `pnpm typecheck` passes for both node and web projects.
+- E2 `pnpm build` produces main, preload and renderer bundles.
+- E3 `tests/engine.test.mts` spawns the real engine, gets a session identity from
+  `get_state`, and asserts that `get_commands` contains gentle-pi commands — proof that the
+  extensions load inside pi as an interactive RPC host.
+- E4 `tests/launch.test.mts` pins the launch contract: `--mode rpc`, the interactive host
+  flag, the owned agent home, single-load extension injection, and take-over mode.
 
 ## Log
 
@@ -68,6 +98,20 @@ L4. Decision: Electron + React + TypeScript.
 
 L5. Decision: first milestone is the usable vertical slice (sessions, streaming, tool
     cards, ask-user dialogs, permission/consent), not full TUI parity.
+
+L7. User statement of purpose, verbatim: "hacer una version app para las personas no se
+    sienten comodas con la versiond e terminal, no pienso cobrar nada de algo por el
+    estilo, la idea que la herramienta de gentleman llegue a mas personas". Consequence:
+    the audience is non-terminal users, so reach depends on distribution and first-run
+    usability, not on the terminal being merely optional.
+
+L8. Decision: onboarding is part of the first milestone. Provider registration runs behind
+    the app through a configuration window; no terminal is shown to the user.
+
+L9. Evidence: `pi auth check --provider <p> --json` reports `ready`/`not_ready`/`invalid`
+    with exit codes 0/1/2 and needs no TTY, so the app can detect readiness itself;
+    `pi auth login` is documented as requiring an interactive terminal, which the app must
+    satisfy behind its own window. Credentials live in `<agent-dir>/auth.json`.
 
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in

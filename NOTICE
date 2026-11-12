@@ -1,0 +1,17 @@
+# Notice
+
+This application is an independent desktop host for **gentle-pi**, the package published
+from <https://github.com/Gentleman-Programming/gentle-shell>, which is distributed under
+the MIT license. It runs the **pi** coding agent, published by Earendil Works, also under
+the MIT license.
+
+This is a free, non-commercial community build. It is **not affiliated with, endorsed by, or sponsored by** the Gentle Shell project,
+Gentleman Programming, or Earendil Works.
+
+`gentle-shell` is presented by its authors as a trademark. This project therefore does not
+use that name as its product name, and does not ship the upstream brand assets. If you
+publish a build of this application, keep this notice, keep the MIT license, and do not
+imply that your build is the official Gentle Shell distribution.
+
+No upstream source is copied into this repository. The engine and the extensions are
+consumed as published npm dependencies so that upstream fixes remain reachable.

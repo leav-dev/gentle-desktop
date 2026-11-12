@@ -1,0 +1,31 @@
+appId: dev.gentledesktop.app
+productName: Gentle Desktop
+directories:
+  output: release
+  buildResources: build
+
+# The engine is spawned as a script by Electron's own Node, so the two runtime packages
+# must live outside the asar archive to be readable by a child process.
+asarUnpack:
+  - node_modules/@earendil-works/**
+  - node_modules/gentle-pi/**
+
+win:
+  target:
+    - nsis
+  artifactName: ${name}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+
+linux:
+  target:
+    - AppImage
+  category: Development
