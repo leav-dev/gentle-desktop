@@ -42,6 +42,15 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      # A transitive dependency (gentle-pi) compiles its own helper binary during install
+      # and refuses to do it with a Go older than 1.25.10. The runner's preinstalled Go is
+      # older, so without this step the install fails before a single test is attempted.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          # There is no go.sum in this repository to key a module cache on.
+          cache: false
+
       - name: Install
         run: pnpm install --frozen-lockfile
 
