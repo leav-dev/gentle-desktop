@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CommandChoice } from '../../../shared/ipc.ts'
 import { FloatingWindow } from './FloatingWindow.tsx'
 import { resolveGentleDestinations, type GentleDestination } from '../state/gentleMenu.ts'
@@ -69,31 +69,44 @@ export function GentleView({
     [onClose, onOpenCommands, onOpenProviders, onOpenSubagents, onRunCommand]
   )
 
-  // The window opens with nothing focused to type into, so the arrow keys move a cursor
-  // over the rows and ⏎ chooses. Mouse users get the same rows as buttons.
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      setIndex(Math.min(activeIndex + 1, Math.max(destinations.length - 1, 0)))
-      return
-    }
-    if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      setIndex(Math.max(activeIndex - 1, 0))
-      return
-    }
-    if (event.key === 'Enter') {
-      const chosen = destinations[activeIndex]
-      if (chosen !== undefined) {
+  // There is nothing to type into here, and `autoFocus` on a plain container is not
+  // dependable — the focus stays on the body and the arrow keys never arrive. The listener
+  // therefore lives on the window for as long as this window is open, and the container is
+  // still focused so the scroll and the screen reader land somewhere sensible.
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    containerRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent): void => {
+      // A dialog from the engine can sit on top of this window; it owns the keyboard then.
+      if (document.querySelector('.floating-panel-dialog') !== null) return
+
+      if (event.key === 'ArrowDown') {
         event.preventDefault()
-        choose(chosen)
+        setIndex((current) => Math.min(current + 1, Math.max(destinations.length - 1, 0)))
+        return
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setIndex((current) => Math.max(current - 1, 0))
+        return
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        const chosen = destinations[Math.min(activeIndex, Math.max(destinations.length - 1, 0))]
+        if (chosen !== undefined) choose(chosen)
       }
     }
-  }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeIndex, destinations, choose])
 
   return (
     <FloatingWindow title="gentle" className="floating-panel-palette" onClose={onClose} hint="↑ ↓ choose · ⏎ open · esc close">
-      <div tabIndex={0} autoFocus onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
+      <div ref={containerRef} tabIndex={0} style={{ outline: 'none' }}>
         <ul className="palette-list" role="listbox" aria-label="Gentle settings">
           {destinations.map((destination, position) => (
             <li key={destination.id}>
