@@ -2,10 +2,14 @@
   color-scheme: dark;
   --bg: #0f1115;
   --bg-panel: #151922;
+  --bg-raised: #1b2030;
   --border: #242a36;
   --text: #e6e9ef;
   --text-dim: #8b93a7;
   --accent: #7c9cff;
+  --danger: #ff7a8a;
+  --add: #6fce8f;
+  --del: #ff8a96;
 
   font-family: ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
   font-size: 14px;
@@ -30,13 +34,30 @@ body {
 
 .app-frame {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 220px 1fr;
   height: 100%;
 }
 
 .app-sidebar {
   background: var(--bg-panel);
   border-right: 1px solid var(--border);
+  padding: 12px;
+}
+
+.sidebar-new-session {
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sidebar-new-session:hover {
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .app-conversation {
@@ -45,10 +66,372 @@ body {
   min-width: 0;
 }
 
-.app-placeholder {
+/* --- status bar ---------------------------------------------------------- */
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.status-phase {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-phase-ready {
+  color: var(--add);
+}
+
+.status-phase-crashed,
+.status-phase-restarting {
+  color: var(--danger);
+}
+
+.status-notice {
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- transcript ---------------------------------------------------------- */
+
+.transcript {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transcript-empty {
   margin: auto;
   color: var(--text-dim);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 12px;
+}
+
+.message {
+  max-width: 80ch;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.message-user {
+  align-self: flex-end;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+}
+
+.message-assistant {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+}
+
+.message-streaming .message-text::after {
+  content: '▍';
+  color: var(--accent);
+  animation: pulse 1s steps(2) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0;
+  }
+}
+
+.message-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.message-thinking {
+  align-self: flex-start;
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.message-thinking-summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.message-thinking-text {
+  color: var(--text-dim);
+}
+
+/* --- tool cards ---------------------------------------------------------- */
+
+.tool-card {
+  align-self: flex-start;
+  max-width: 90ch;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.tool-card.tool-running {
+  border-color: var(--accent);
+}
+
+.tool-card.tool-error {
+  border-color: var(--danger);
+}
+
+.tool-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tool-name {
+  color: var(--accent);
+}
+
+.tool-status {
+  color: var(--text-dim);
+}
+
+.tool-error .tool-status {
+  color: var(--danger);
+}
+
+.tool-payload {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  color: var(--text-dim);
+  overflow-x: auto;
+  max-height: 240px;
+}
+
+/* --- diff ---------------------------------------------------------------- */
+
+.diff {
+  margin: 0;
+  padding: 8px 0;
+  font-size: 12px;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  overflow-x: auto;
+  max-height: 280px;
+}
+
+.diff-line {
+  display: block;
+  padding: 0 12px;
+  white-space: pre;
+}
+
+.diff-sign {
+  display: inline-block;
+  width: 1ch;
+  margin-right: 1ch;
+}
+
+.diff-add {
+  background: rgba(111, 206, 143, 0.12);
+  color: var(--add);
+}
+
+.diff-del {
+  background: rgba(255, 138, 150, 0.1);
+  color: var(--del);
+}
+
+.diff-context {
+  color: var(--text-dim);
+}
+
+/* --- composer ------------------------------------------------------------ */
+
+.composer {
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.composer-input {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.composer-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.composer-input:disabled {
+  opacity: 0.5;
+}
+
+.composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.composer-send,
+.composer-abort {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font: inherit;
+  cursor: pointer;
+}
+
+.composer-send {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d1017;
+}
+
+.composer-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.composer-abort {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* --- dialogs ------------------------------------------------------------- */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 12, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 10;
+}
+
+.dialog-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(520px, 90vw);
+}
+
+.dialog-queue-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.dialog-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dialog-message {
+  margin: 0;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+}
+
+.dialog-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dialog-option {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dialog-option:hover {
+  border-color: var(--accent);
+}
+
+.dialog-input {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.dialog-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dialog-actions button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dialog-confirm {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #0d1017 !important;
+}
+
+.dialog-decline:hover,
+.dialog-cancel:hover {
+  border-color: var(--text-dim);
 }
