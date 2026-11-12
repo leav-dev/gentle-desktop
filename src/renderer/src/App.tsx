@@ -127,6 +127,7 @@ export function App(): React.JSX.Element {
           <PromptPanel
             disabled={!engine.ready}
             streaming={engine.streaming}
+            mode={engine.permissionMode}
             onSend={engine.send}
             onAbort={engine.abort}
           />

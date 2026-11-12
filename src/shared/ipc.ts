@@ -37,7 +37,8 @@ export const IPC = {
   authCancel: 'auth:cancel',
   authPrompt: 'auth:prompt',
   authEvent: 'auth:event',
-  authAnswer: 'auth:answer'
+  authAnswer: 'auth:answer',
+  agentMode: 'agent:mode'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -149,6 +150,9 @@ export interface ProviderChoice {
   models: EngineModelRef[]
 }
 
+/** The agent's permission mode, as gentle-pi persists it. */
+export type AgentPermissionMode = 'normal' | 'auto' | 'yolo' | 'super-yolo'
+
 export type AuthMethod = 'oauth' | 'api_key'
 
 export interface AuthLoginRequest {
@@ -199,6 +203,9 @@ export interface GentleApi {
   }
   odd: {
     tasks: () => Promise<OddTaskFeature[]>
+  }
+  agent: {
+    mode: () => Promise<AgentPermissionMode>
   }
   auth: {
     providers: () => Promise<ProviderChoice[]>

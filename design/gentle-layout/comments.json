@@ -30,8 +30,19 @@
       "excerpt": "🔥 YOLO",
       "comment": "esto debe de ir junto al estado del agene",
       "createdAt": "2026-11-12T02:33:01.432Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-12T02:33:01.485Z",
+      "resolvedAt": "2026-11-12T02:36:44.927Z"
+    },
+    {
+      "id": "yeul77bc",
+      "file": "01-terminal-faithful.html",
+      "selector": "body > footer",
+      "excerpt": "main ±3 │ deepseek-v4-flash · medium │ 2 tasks · 1 helper ⌥⌘P fold rail · ⌘K history",
+      "comment": "la rama en la que esta abajando va en  la barra superior, el resto es inecesario ya que en otras partes del layout se muestra",
+      "createdAt": "2026-11-12T02:38:27.242Z",
+      "status": "open",
+      "sentAt": "2026-11-12T02:38:27.300Z",
       "resolvedAt": null
     }
   ]

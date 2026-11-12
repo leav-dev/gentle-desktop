@@ -11,6 +11,7 @@ import { AuthPromptBridge } from './auth-bridge.ts'
 import { listProviderChoices, loginProvider, providerConfigured } from './auth.ts'
 import { listOddTasks } from './odd-tasks.ts'
 import { collectRepoStatus, emptyRepoStatus } from './repo.ts'
+import { readPermissionMode } from './permission-mode.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
 
@@ -60,6 +61,8 @@ function registerIpc(instance: PiHost): void {
   ipcMain.handle(IPC.sessionsSwitch, async (_event, sessionPath: string) => instance.switchSession(sessionPath))
 
   const agentHome = (): string | null => instance.status().home ?? null
+
+  ipcMain.handle(IPC.agentMode, async () => readPermissionMode())
 
   ipcMain.handle(IPC.authProviders, async () => {
     const home = agentHome()

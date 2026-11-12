@@ -134,6 +134,8 @@
       }
       .petal { color: var(--accent); }
       .prompt-rule .right { margin-left: auto; color: var(--dim); }
+      /* The agent's permission mode belongs next to the agent's own state label. */
+      .mode-badge { color: var(--warning); font-weight: 700; letter-spacing: 0.04em; }
       .prompt-input { padding: 10px 12px; color: var(--text); }
       .prompt-input em { color: var(--accent); font-style: normal; }
       .caret {
@@ -254,6 +256,7 @@
           <div class="prompt-rule">
             <span class="petal">✿</span>
             <span>waiting for input</span>
+            <span class="mode-badge">🔥 YOLO</span>
             <span class="right">esc · stop · ⌘K history</span>
           </div>
           <div class="prompt-input"><em>› </em>fold the tasks panel too<span class="caret"></span></div>
@@ -292,8 +295,6 @@
 
     <footer>
       <b>main</b><span class="warn">±3</span>
-      <span class="sep">│</span>
-      <span class="badge">🔥 YOLO</span>
       <span class="sep">│</span>
       <span><b>deepseek-v4-flash</b> · medium</span>
       <span class="sep">│</span>

@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { DialogRequest, ExtensionUiRequest, RpcEvent, SessionState } from '../../../shared/protocol.ts'
-import type { HostStatus, OddTaskFeature, RepoStatus, SessionStats } from '../../../shared/ipc.ts'
+import type {
+  AgentPermissionMode,
+  HostStatus,
+  OddTaskFeature,
+  RepoStatus,
+  SessionStats
+} from '../../../shared/ipc.ts'
 import {
   appendUserMessage,
   hydrateTranscript,
@@ -53,6 +59,8 @@ export interface EngineView {
   dialogs: DialogRequest[]
   activeDialog: DialogRequest | null
   notice: ExtensionUiRequest | null
+  /** The agent's permission mode; only unguarded modes are surfaced in the prompt. */
+  permissionMode: AgentPermissionMode
   send: (message: string) => void
   switchSession: (sessionPath: string) => void
   abort: () => void
@@ -71,6 +79,7 @@ export function useEngine(): EngineView {
   const [sessionState, setSessionState] = useState<SessionState | null>(null)
   const [dialogs, setDialogs] = useState<DialogRequest[]>([])
   const [notice, setNotice] = useState<ExtensionUiRequest | null>(null)
+  const [permissionMode, setPermissionMode] = useState<AgentPermissionMode>('normal')
   const [activity, setActivity] = useState<AgentActivity>(emptyAgentActivity)
   const [oddTasks, setOddTasks] = useState<OddTaskFeature[]>([])
   const [repo, setRepo] = useState<RepoStatus | null>(null)
@@ -82,6 +91,8 @@ export function useEngine(): EngineView {
     void window.gentle.repo.status().then(setRepo).catch(() => {})
     void window.gentle.odd.tasks().then(setOddTasks).catch(() => {})
     void window.gentle.session.stats().then(setStats).catch(() => {})
+    // The permission mode can change outside the app, so it is re-read with the rest.
+    void window.gentle.agent.mode().then(setPermissionMode).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -195,6 +206,7 @@ export function useEngine(): EngineView {
     ready,
     streaming: transcript.isStreaming,
     transcript,
+    permissionMode,
     sessionName: sessionState?.sessionName ?? null,
     sessionPath: sessionState?.sessionFile ?? null,
     model: sessionState?.model,

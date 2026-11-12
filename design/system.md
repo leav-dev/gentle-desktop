@@ -60,6 +60,9 @@ and the brand petal. Dim is metadata only.
 - **Prompt panel** — the only place the petal appears: `✿` plus a state label (`exploring…`,
   `waiting for input`), a rule above the field, and the input prefixed with `› `. Never a
   boxed chat input.
+- **Agent permission mode** (`🔥 YOLO`, `💥 SUPER-YOLO`) sits on the prompt rule immediately
+  after the agent state, because it describes how the agent will act on the next turn. It is
+  never a status-bar segment, and it is absent in the default guarded mode.
 - **Top bar** — brand, working directory, and on the right: the history affordance, model
   with effort, context usage gauge with percent, and cost. Context usage and cost live here
   and nowhere else; they are never repeated in the rail or the status bar.

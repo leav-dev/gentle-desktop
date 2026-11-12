@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   IPC,
+  type AgentPermissionMode,
   type AuthEventEnvelope,
   type AuthLoginRequest,
   type AuthLoginResult,
@@ -48,6 +49,9 @@ const api: GentleApi = {
   sessions: {
     list: () => ipcRenderer.invoke(IPC.sessionsList) as Promise<SessionSummary[]>,
     switchTo: (sessionPath) => ipcRenderer.invoke(IPC.sessionsSwitch, sessionPath) as Promise<void>
+  },
+  agent: {
+    mode: () => ipcRenderer.invoke(IPC.agentMode) as Promise<AgentPermissionMode>
   },
   auth: {
     providers: () => ipcRenderer.invoke(IPC.authProviders) as Promise<ProviderChoice[]>,

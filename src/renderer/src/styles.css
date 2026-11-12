@@ -1128,3 +1128,11 @@ body {
 .dialog-cancel:hover {
   border-color: var(--dim);
 }
+
+/* The agent's permission mode belongs on the prompt rule, next to its state label. */
+.mode-badge {
+  color: var(--warning);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}

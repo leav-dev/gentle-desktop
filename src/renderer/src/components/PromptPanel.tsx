@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import type { AgentPermissionMode } from '../../../shared/ipc.ts'
 import { historyKeyLabel } from '../state/format.ts'
 
 /**
@@ -9,14 +10,24 @@ import { historyKeyLabel } from '../state/format.ts'
  * chat input with a send button as the primary affordance — the keyboard
  * contract leads; the small button only serves mouse users.
  */
+const MODE_LABELS: Record<AgentPermissionMode, string | null> = {
+  normal: null,
+  auto: null,
+  yolo: '🔥 YOLO',
+  'super-yolo': '💥 SUPER-YOLO'
+}
+
 export function PromptPanel({
   disabled,
   streaming,
+  mode,
   onSend,
   onAbort
 }: {
   disabled: boolean
   streaming: boolean
+  /** The agent's permission mode; only the unguarded ones are worth surfacing. */
+  mode: AgentPermissionMode
   onSend: (message: string) => void
   onAbort: () => void
 }): React.JSX.Element {
@@ -26,6 +37,7 @@ export function PromptPanel({
   const canSend = !disabled && trimmed.length > 0
 
   const stateLabel = disabled ? 'waiting for the engine' : streaming ? 'working…' : 'waiting for input'
+  const modeLabel = MODE_LABELS[mode]
 
   function submit(): void {
     if (!canSend) return
@@ -58,6 +70,7 @@ export function PromptPanel({
       <div className="prompt-rule">
         <span className="petal">✿</span>
         <span>{stateLabel}</span>
+        {modeLabel ? <span className="mode-badge">{modeLabel}</span> : null}
         <span className="prompt-rule-right">{streaming ? 'esc · stop' : historyKeyLabel()}</span>
       </div>
       <div className="prompt-input">

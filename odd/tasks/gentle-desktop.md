@@ -60,6 +60,15 @@ S12. There is no permanent conversation list. Saved conversations are reached th
     picker opened on demand, as in the terminal. User's words: "no me gusta tener un
     listado de las deams conversaiones".
 
+S13. The commands the engine exposes are usable from the app: listed, filtered and executed
+    with the same effect as typing them in the terminal. User's words: "se requiere que se
+    soporten comando ... para respetar lo mas posible la experiencia de gentle shell".
+
+S14. Surfaces the terminal shows as floating windows are floating overlays in the app, all
+    sharing one chrome — rounded frame, title, tone, hint slot — instead of each feature
+    inventing its own modal. User's words: "y las ventanas flotantes con las que cuenta
+    gentel shell".
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
@@ -92,6 +101,12 @@ T19. [x] Rebuild the window shell as the terminal layout: header row, transcript
     prompt panel and the status bar, in the Gentleman-Cute palette. Done in d3faf02. — S11
 T20. [x] Replace the session sidebar with a history picker opened on demand. Done in
     d3faf02. — S12
+T26. Command palette: list the engine's commands over `get_commands`, filter by typing,
+    navigate with the keyboard, and run the chosen one through `prompt "/<name>"`, with the
+    palette closing and the turn starting as if it had been typed. — S13
+T27. Floating window chrome: one shared overlay component with the terminal's frame, tone
+    variants and hint slot, adopted by the command palette, the history picker and the
+    dialog host so every floating surface looks and behaves the same. — S14
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
@@ -221,6 +236,11 @@ L14. Design handoff: `design/gentle-layout/01-terminal-faithful.html` is the cho
     and radius come from `design/system.md`. Two rules from the canvas apply to the build:
     a rail section with nothing to show is not rendered at all, and context usage plus cost
     live in the top bar only.
+
+L16. User requirement, verbatim: "se requiere que se soporten comando y las ventanas
+    flotantes con las que cuenta gentel shell para respetar lo mas posible la experiencia de
+    gentle shell". Commands come from `get_commands` and run through `prompt "/<name>"`;
+    floating windows follow the terminal's card chrome in `lib/shell-card.ts`.
 
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in
