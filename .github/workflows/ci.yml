@@ -1,35 +1,31 @@
 name: CI
 
-# Runs on every push to main and on every pull request aimed at it. The point is that main
-# is never taken on trust: whoever merges sees the same three checks the machine that built
-# it saw.
+# Three questions, in order: is the tree sound (every push and PR), does it package on each
+# platform (every push), and does the release carry those packages (tags only).
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
 
-# Read-only: this workflow proves the tree, it does not publish anything.
 permissions:
   contents: read
 
-# A second push to the same branch cancels the first run; nobody needs the older answer.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # CI never launches Electron — it typechecks, tests and bundles. Skipping the binary
-  # download keeps the install step out of the one place that fails most often on runners.
-  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-
 jobs:
   verify:
     name: typecheck, tests, build
-    # Windows on purpose: it is the platform this fork ships to, and the defects that
-    # have actually reached the user — a corrupt asar, CRLF files, a privilege-gated
-    # build — were platform defects. A green Linux run would have said less.
+    # Windows on purpose: it is the platform this fork ships to, and the defects that have
+    # actually reached the user — a corrupt asar, CRLF files, a privilege-gated build — were
+    # platform defects. A green Linux run would have said less.
     runs-on: windows-latest
+    env:
+      # This job never launches Electron. Skipping the binary keeps the install short.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v4
 
@@ -43,8 +39,8 @@ jobs:
           cache: pnpm
 
       # A transitive dependency (gentle-pi) compiles its own helper binary during install
-      # and refuses to do it with a Go older than 1.25.10. The runner's preinstalled Go is
-      # older, so without this step the install fails before a single test is attempted.
+      # and refuses a Go older than 1.25.10. The runner's preinstalled Go is older, so
+      # without this step the install fails before a single test is attempted.
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25.x'
@@ -63,3 +59,92 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  package:
+    name: package (${{ matrix.platform }})
+    needs: verify
+    # Pull requests get the checks; only what lands on main earns a packaged build, and one
+    # run per push instead of four is the difference between a usable minute budget and not.
+    if: github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            os: ubuntu-latest
+            args: --linux AppImage
+          - platform: macos
+            os: macos-latest
+            args: --mac dmg
+          - platform: windows
+            os: windows-latest
+            args: --win nsis
+    runs-on: ${{ matrix.os }}
+    env:
+      # No certificate anywhere: the builds are unsigned on purpose and saying so is better
+      # than a signing step that fails on a machine that has no identity to sign with.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: false
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Package
+        run: npx electron-builder ${{ matrix.args }} --publish never
+
+      # The packaging step is where the platform's own binary leaves the pipeline; keeping it
+      # as an artifact is what lets a run be inspected after the fact.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: attach packages to the release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # The only job allowed to write: it publishes the binaries the tag names.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          # A tag with no release yet is normal — the release is created here, with the
+          # notes from the repository's default branch, then the binaries are attached.
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes
+          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' \) -print0 |
+            xargs -0 -r gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            -q '.assets[] | "\(.name) — \(.size / 1048576 | floor) MB"'
