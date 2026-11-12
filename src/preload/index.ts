@@ -14,7 +14,8 @@ import {
   type ProviderChoice,
   type RepoStatus,
   type SessionStats,
-  type SessionSummary
+  type SessionSummary,
+  type SubscriptionUsage
 } from '../shared/ipc.ts'
 import type {
   DialogRequest,
@@ -53,6 +54,10 @@ const api: GentleApi = {
   },
   agent: {
     mode: () => ipcRenderer.invoke(IPC.agentMode) as Promise<AgentPermissionMode>
+  },
+  usage: {
+    read: (providerId: string) =>
+      ipcRenderer.invoke(IPC.usageRead, providerId) as Promise<SubscriptionUsage | null>
   },
   auth: {
     providers: () => ipcRenderer.invoke(IPC.authProviders) as Promise<ProviderChoice[]>,

@@ -1270,3 +1270,13 @@ body {
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
+
+/* Subscription usage and its billing marker live with the other numbers. */
+.header-usage {
+  color: var(--text);
+}
+
+.header-cost-sub {
+  color: var(--dim);
+  font-size: 11px;
+}

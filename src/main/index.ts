@@ -12,6 +12,7 @@ import { listProviderChoices, loginProvider, providerConfigured } from './auth.t
 import { listOddTasks } from './odd-tasks.ts'
 import { collectRepoStatus, emptyRepoStatus } from './repo.ts'
 import { readPermissionMode } from './permission-mode.ts'
+import { readSubscriptionUsage } from './subscription-usage.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
 
@@ -63,6 +64,12 @@ function registerIpc(instance: PiHost): void {
   const agentHome = (): string | null => instance.status().home ?? null
 
   ipcMain.handle(IPC.agentMode, async () => readPermissionMode())
+
+  ipcMain.handle(IPC.usageRead, async (_event, providerId: string) => {
+    const home = agentHome()
+    if (!home) return null
+    return readSubscriptionUsage({ home, providerId })
+  })
 
   ipcMain.handle(IPC.authProviders, async () => {
     const home = agentHome()

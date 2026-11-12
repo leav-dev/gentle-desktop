@@ -92,7 +92,8 @@ export function PromptPanel({
         <span>{stateLabel}</span>
         {modeLabel ? <span className="mode-badge">{modeLabel}</span> : null}
         {statusText !== null ? <span className="prompt-status">{statusText}</span> : null}
-        <span className="prompt-rule-right">{streaming ? 'esc · stop' : historyKeyLabel()}</span>
+        {/* The action row owns the accelerators; repeating one here is noise. */}
+        <span className="prompt-rule-right">{streaming ? 'esc · stop' : ''}</span>
       </div>
       <div className="prompt-input">
         <span className="prompt-prefix" aria-hidden="true">

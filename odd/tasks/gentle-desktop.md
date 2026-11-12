@@ -110,6 +110,9 @@ T27. [x] Floating window chrome: one shared overlay component with the terminal'
 T28. [x] Close the gaps that removing the status bar opened: extension notifications become
     a toast, extension status lines sit beside the prompt rule, and the engine phase stays
     visible in the top bar. Done in 035c4b8. — S11, S14
+T31. [x] Read subscription usage from the provider's own quota endpoint with the credential
+    pi already stored, so the top bar can show it. — S11
+T35. [x] Render subscription usage and the `sub` billing marker in the top bar. — S11
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide

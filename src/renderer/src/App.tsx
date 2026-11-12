@@ -180,6 +180,7 @@ export function App(): React.JSX.Element {
         thinkingLevel={engine.thinkingLevel}
         stats={engine.stats}
         repo={engine.repo}
+        usage={engine.usage}
         railCollapsed={!railWide}
         onNewSession={engine.newSession}
         onOpenCommands={openPalette}

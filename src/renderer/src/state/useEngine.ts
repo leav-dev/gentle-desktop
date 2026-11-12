@@ -5,8 +5,10 @@ import type {
   HostStatus,
   OddTaskFeature,
   RepoStatus,
-  SessionStats
+  SessionStats,
+  SubscriptionUsage
 } from '../../../shared/ipc.ts'
+import { modelRef } from './format.ts'
 import {
   appendUserMessage,
   hydrateTranscript,
@@ -67,6 +69,8 @@ export interface EngineView {
   activeDialog: DialogRequest | null
   /** The agent's permission mode; only unguarded modes are surfaced in the prompt. */
   permissionMode: AgentPermissionMode
+  /** Subscription usage for the active provider, when it reports one. */
+  usage: SubscriptionUsage | null
   /** The latest extension notification, rendered as a toast. */
   notice: AgentNotice | null
   /** The latest extension status line, shown beside the prompt rule. */
@@ -96,7 +100,14 @@ export function useEngine(): EngineView {
   const [stats, setStats] = useState<SessionStats | null>(null)
   const [notice, setNotice] = useState<AgentNotice | null>(null)
   const [statusText, setStatusText] = useState<string | null>(null)
+  const [usage, setUsage] = useState<SubscriptionUsage | null>(null)
+  const activeModel = useRef<{ provider: string; id: string } | null>(null)
   const notifySeq = useRef(0)
+
+  // The usage call needs the provider and model the engine is currently using.
+  useEffect(() => {
+    activeModel.current = modelRef(sessionState?.model)
+  }, [sessionState?.model])
 
   const refreshShellData = useCallback((): void => {
     // The engine is not the source of these, so a rejected call keeps the last
@@ -106,6 +117,12 @@ export function useEngine(): EngineView {
     void window.gentle.session.stats().then(setStats).catch(() => {})
     // The permission mode can change outside the app, so it is re-read with the rest.
     void window.gentle.agent.mode().then(setPermissionMode).catch(() => {})
+    // Subscription usage is not on the RPC surface; a provider without a quota endpoint
+    // resolves to null and the header then shows nothing.
+    const model = activeModel.current
+    if (model !== null) {
+      void window.gentle.usage.read(model.provider).then(setUsage).catch(() => {})
+    }
   }, [])
 
   useEffect(() => {
@@ -231,6 +248,7 @@ export function useEngine(): EngineView {
     streaming: transcript.isStreaming,
     transcript,
     permissionMode,
+    usage,
     notice,
     statusText,
     dismissNotice,

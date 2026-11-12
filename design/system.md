@@ -63,9 +63,10 @@ and the brand petal. Dim is metadata only.
 - **Agent permission mode** (`🔥 YOLO`, `💥 SUPER-YOLO`) sits on the prompt rule immediately
   after the agent state, because it describes how the agent will act on the next turn. It is
   never a status-bar segment, and it is absent in the default guarded mode.
-- **Top bar** — brand, the project folder name, branch with `±N`, and on the right: the
-  history affordance, model with effort, context usage gauge with percent, subscription usage
-  when the provider reports it, and cost with a `sub` marker on subscription billing.
+- **Top bar** — brand, the project folder name, branch with `±N`, and on the right: model
+  with effort, context usage gauge with percent, subscription usage when the provider
+  reports it, and cost with a `sub` marker on subscription billing. It carries no actions:
+  they live on the action row, and an accelerator is never advertised twice.
   Everything the window needs to state lives here and nowhere else; nothing is repeated in
   the rail or the prompt rule.
 - **Action row** — a labelled button row directly under the top bar for every overlay and

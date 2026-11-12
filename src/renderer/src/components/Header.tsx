@@ -1,4 +1,9 @@
-import type { HostStatus, RepoStatus, SessionStats } from '../../../shared/ipc.ts'
+import type {
+  HostStatus,
+  RepoStatus,
+  SessionStats,
+  SubscriptionUsage
+} from '../../../shared/ipc.ts'
 import {
   agentsShortcut,
   commandsShortcut,
@@ -7,6 +12,7 @@ import {
   formatCost,
   historyShortcut,
   modelLabel,
+  modelRef,
   percentLabel,
   settingsShortcut
 } from '../state/format.ts'
@@ -42,6 +48,7 @@ export function Header({
   thinkingLevel,
   stats,
   repo,
+  usage,
   railCollapsed,
   onNewSession,
   onOpenCommands,
@@ -55,6 +62,7 @@ export function Header({
   thinkingLevel: string | null
   stats: SessionStats | null
   repo: RepoStatus | null
+  usage: SubscriptionUsage | null
   /** Whether the rail is folded away; the toggle only exists when it is. */
   railCollapsed: boolean
   onNewSession: () => void
@@ -67,8 +75,18 @@ export function Header({
   const label = modelLabel(model)
   const level = effortLabel(thinkingLevel)
   const cost = formatCost(stats?.cost)
-  const usage = stats?.contextUsage
+  const contextUsage = stats?.contextUsage
   const modelText = label !== null && level !== null ? `${label} · ${level}` : label
+  /**
+   * The row for the model in use, falling back to the first metered model. A provider that
+   * reports no quota leaves the whole segment out.
+   */
+  const usageRow = (() => {
+    if (usage === null || usage.models.length === 0) return null
+    const active = modelRef(model)
+    return usage.models.find((entry) => entry.id === active?.id) ?? usage.models[0] ?? null
+  })()
+
   const dirty = repo?.dirtyCount ?? 0
   const projectName = projectFolder(status.cwd)
 
@@ -111,16 +129,30 @@ export function Header({
             </span>
           ) : null}
           {modelText !== null ? <span className="header-model">{modelText}</span> : null}
-          {usage !== undefined && usage !== null ? (
+          {contextUsage !== undefined && contextUsage !== null ? (
             <span className="header-ctx">
               ctx{' '}
-              <span className="gauge" aria-label={`Context ${percentLabel(usage.percent)}`}>
-                {contextGauge(usage.percent)}
+              <span className="gauge" aria-label={`Context ${percentLabel(contextUsage.percent)}`}>
+                {contextGauge(contextUsage.percent)}
               </span>{' '}
-              {percentLabel(usage.percent)}
+              {percentLabel(contextUsage.percent)}
             </span>
           ) : null}
-          {cost !== null ? <span className="header-cost">{cost}</span> : null}
+          {usageRow !== null ? (
+            <span className="header-usage">
+              usage{' '}
+              <span className="gauge" aria-label={`Subscription usage ${percentLabel(usageRow.usedPercent)}`}>
+                {contextGauge(usageRow.usedPercent)}
+              </span>{' '}
+              {percentLabel(usageRow.usedPercent)}
+            </span>
+          ) : null}
+          {cost !== null ? (
+            <span className="header-cost">
+              {cost}
+              {usageRow !== null ? <span className="header-cost-sub"> sub</span> : null}
+            </span>
+          ) : null}
         </span>
       </header>
 

@@ -15,6 +15,16 @@ export function modelLabel(model: unknown): string | null {
   return typeof provider === 'string' ? `${provider}/${id}` : id
 }
 
+/** The engine reports the model as opaque JSON; this is what an API call needs from it. */
+export function modelRef(model: unknown): { provider: string; id: string } | null {
+  if (typeof model !== 'object' || model === null) return null
+  const record = model as Record<string, unknown>
+  const id = record['modelId'] ?? record['id']
+  const provider = record['provider']
+  if (typeof id !== 'string' || typeof provider !== 'string') return null
+  return { provider, id }
+}
+
 /** The effort level is the terminal's "medium"/"high" suffix; `off` adds noise. */
 export function effortLabel(level: unknown): string | null {
   if (typeof level !== 'string' || level.length === 0 || level === 'off') return null

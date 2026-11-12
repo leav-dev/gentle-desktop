@@ -39,7 +39,8 @@ export const IPC = {
   authPrompt: 'auth:prompt',
   authEvent: 'auth:event',
   authAnswer: 'auth:answer',
-  agentMode: 'agent:mode'
+  agentMode: 'agent:mode',
+  usageRead: 'usage:read'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -121,6 +122,26 @@ export interface SessionStats {
   tokens?: SessionUsageTotals
   cost?: SessionUsageTotals
   contextUsage?: SessionContextUsage | null
+}
+
+/** One metered model of a subscription, as the provider reports it. */
+export interface SubscriptionUsageModel {
+  id: string
+  usedPercent: number
+  limitReached: boolean
+  resetAt: number | null
+  /** The rolling sub-window when the provider reports one. */
+  rolling: { usedPercent: number; resetAt: number | null } | null
+}
+
+/**
+ * Subscription usage read from the provider's own quota endpoint. pi exposes none of this
+ * over RPC, so the app asks with the credential pi already stored.
+ */
+export interface SubscriptionUsage {
+  provider: string
+  models: SubscriptionUsageModel[]
+  fetchedAt: number
 }
 
 /** One model the running engine can actually use right now. */
@@ -219,6 +240,9 @@ export interface GentleApi {
   }
   agent: {
     mode: () => Promise<AgentPermissionMode>
+  }
+  usage: {
+    read: (providerId: string) => Promise<SubscriptionUsage | null>
   }
   auth: {
     providers: () => Promise<ProviderChoice[]>
