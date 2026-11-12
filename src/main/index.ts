@@ -1,7 +1,55 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { IPC, type HostStatus, type PromptRequest } from '../shared/ipc.ts'
+import type { ExtensionUiResponse, RpcEvent } from '../shared/protocol.ts'
+import { PiHost } from './rpc/host.ts'
 
-/** The application window. The engine is wired in the next commit. */
+let host: PiHost | null = null
+
+function broadcast(channel: string, payload: unknown): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) window.webContents.send(channel, payload)
+  }
+}
+
+function createHost(): PiHost {
+  return new PiHost({
+    onStatus: (status: HostStatus) => broadcast(IPC.hostStatus, status),
+    onEvent: (event: RpcEvent) => broadcast(IPC.hostEvent, event),
+    onDialog: (request) => broadcast(IPC.hostDialog, request),
+    onNotice: (request) => broadcast(IPC.hostNotice, request),
+    onDiagnostic: (message) => process.stderr.write(`[engine] ${message}\n`)
+  })
+}
+
+function registerIpc(instance: PiHost): void {
+  ipcMain.handle(IPC.hostGetStatus, () => instance.status())
+
+  ipcMain.handle(IPC.hostRestart, async () => instance.restart())
+
+  ipcMain.handle(IPC.sessionPrompt, async (_event, request: PromptRequest) => {
+    return instance.prompt(request.message)
+  })
+
+  ipcMain.handle(IPC.sessionAbort, async () => instance.abort())
+
+  ipcMain.handle(IPC.sessionNew, async () => instance.newSession())
+
+  ipcMain.handle(IPC.sessionState, async () => instance.sessionState())
+
+  ipcMain.handle(IPC.sessionMessages, async () => instance.messages())
+
+  ipcMain.on(IPC.dialogAnswer, (_event, response: ExtensionUiResponse) => {
+    try {
+      instance.answerDialog(response)
+    } catch (error) {
+      process.stderr.write(
+        `[dialog] cannot answer ${response.id}: ${error instanceof Error ? error.message : String(error)}\n`
+      )
+    }
+  })
+}
+
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
     width: 1280,
@@ -39,7 +87,12 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  host = createHost()
+  registerIpc(host)
   createWindow()
+
+  // The engine starts with the app: the window is the only surface the user needs.
+  host.start({ cwd: process.env['GENTLE_DESKTOP_CWD'] ?? process.cwd() })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -48,4 +101,9 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('before-quit', () => {
+  void host?.stop()
+  host = null
 })
