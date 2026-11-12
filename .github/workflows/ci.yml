@@ -84,9 +84,16 @@ jobs:
           - platform: linux
             os: ubuntu-latest
             args: --linux AppImage
+          # Explicit labels: macos-13, the last free Intel image, was retired in December
+          # 2025 and a workflow pinned to it now fails immediately. macos-15-intel is the
+          # documented x64 image, and it is itself scheduled for retirement in August 2027 —
+          # after which Apple Silicon is the only macOS GitHub will run.
           - platform: macos
-            os: macos-latest
-            args: --mac dmg
+            os: macos-15
+            args: --mac dmg --arm64
+          - platform: macos-intel
+            os: macos-15-intel
+            args: --mac dmg --x64
           - platform: windows
             os: windows-latest
             args: --win nsis
