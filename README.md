@@ -10,6 +10,10 @@ extensions behave exactly as upstream defines them.
 > Independent project. Not affiliated with, endorsed by, or sponsored by the Gentle Shell
 > project or Earendil Works. See [NOTICE](NOTICE) before you publish a build.
 
+Part of the community around the Gentle tooling, and filed under the
+[`gentle-hub-project`](https://github.com/topics/gentle-hub-project) topic. The name is a
+working title: it is used until the upstream project confirms whether it may be kept.
+
 ## How it works
 
 ```
