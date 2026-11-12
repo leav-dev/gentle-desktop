@@ -91,9 +91,16 @@ node scripts/verify-package.mjs
 It fails when the packaged build is missing the engine, the gentle-pi extensions or the
 renderer bundle — a build can succeed while shipping an app that cannot start an agent.
 
-On Windows, `CSC_IDENTITY_AUTO_DISCOVERY=false pnpm dist` skips code signing. Without that,
-electron-builder extracts its signing toolchain into the user cache and fails when the
-account cannot create symlinks (`Cannot create symbolic link ... privilege required`).
+On Windows the installer step needs symlink privileges: electron-builder extracts its
+signing toolchain into the user cache and fails with
+`Cannot create symbolic link ... privilege required` on an account without that right.
+Either enable Windows Developer Mode, or build the runnable directory without an installer:
+
+```bash
+CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --dir
+```
+
+That produces `release/win-unpacked/Gentle Desktop.exe`, which is the full app.
 
 ## Layout
 

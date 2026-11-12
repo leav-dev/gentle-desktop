@@ -154,6 +154,8 @@ export class PiHost {
     } catch (error) {
       const message =
         error instanceof LaunchResolutionError || error instanceof Error ? error.message : String(error)
+      // A crash the user cannot diagnose is a support ticket; keep it in the log too.
+      this.#listener.onDiagnostic(`cannot start the engine: ${message}`)
       this.#setStatus({ phase: 'crashed', restarts: this.#status.restarts, detail: message })
       return
     }
@@ -175,6 +177,7 @@ export class PiHost {
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+      this.#listener.onDiagnostic(`cannot spawn the engine: ${message}`)
       this.#setStatus({ phase: 'crashed', restarts: this.#status.restarts, detail: message })
       return
     }

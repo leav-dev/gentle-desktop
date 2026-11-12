@@ -98,6 +98,14 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E10 The first packaged launch failed with "engine is not running (phase: crashed)".
+  Root cause: pi declares `exports` with an `import` condition only, so
+  `require.resolve("<pkg>/package.json")` throws and the engine entry never resolved — in
+  dev as well. It stayed hidden because every existing test set the env overrides that
+  bypass resolution. Resolution now walks `node_modules` from an explicit module base,
+  which also works inside `app.asar`, and the crash detail reaches stderr.
+  Verified on the packaged app: the child runs
+  `app.asar/.../pi-coding-agent/dist/bundle/cli.js --mode rpc -e app.asar/.../gentle-pi`.
 - E9 The packaged build exposed a runtime contract that dev never showed: Electron 33
   bundles Node 20.18, and pi's bundle imports `node:module`'s `enableCompileCache`, which
   exists only on Node 22+. The window would open and the engine would die on spawn. The app

@@ -35,57 +35,55 @@ export class LaunchResolutionError extends Error {
   }
 }
 
-const requireFromHere = (): NodeJS.Require => {
-  // Lazy so module consumers that run as ESM (tests, tooling) can still import this file
-  // and rely on the explicit overrides below instead of module-relative resolution.
-  if (typeof __filename !== 'string') {
-    throw new LaunchResolutionError(
-      'cannot resolve packages without a CommonJS module base; set GENTLE_DESKTOP_PI_ENTRY and GENTLE_DESKTOP_GENTLE_PI_ROOT'
-    )
-  }
-  return createRequire(__filename)
+/**
+ * Resolver anchored at an explicit directory, so resolution works in the packaged app
+ * (inside app.asar) and in tests, which run as ESM where `__filename` does not exist.
+ */
+function moduleBaseOrDefault(moduleBase?: string): string {
+  if (moduleBase) return resolve(moduleBase)
+  if (typeof __filename === 'string') return dirname(__filename)
+  throw new LaunchResolutionError(
+    'cannot resolve packages without a module base; pass moduleBase or set GENTLE_DESKTOP_PI_ENTRY'
+  )
 }
 
-function packageRoot(specifier: string): string {
-  const manifest = requireFromHere().resolve(`${specifier}/package.json`)
-  return dirname(manifest)
-}
-
-function packageRootByWalking(specifier: string, entry: string): string {
-  let current = dirname(entry)
-  for (let depth = 0; depth < 6; depth += 1) {
-    const manifest = join(current, 'package.json')
-    if (existsSync(manifest)) {
-      try {
-        const parsed = JSON.parse(readFileSync(manifest, 'utf8')) as { name?: string }
-        if (parsed.name === specifier) return current
-      } catch {
-        // A malformed manifest higher up is not this package's problem.
-      }
-    }
+/**
+ * Finds a dependency directory by walking `node_modules` ancestors of the module base.
+ *
+ * Node's resolver cannot be used here: pi declares `exports` with an `import` condition
+ * only, so `require.resolve` fails even though the package is installed. A filesystem walk
+ * is also what works inside `app.asar`, where Electron patches `fs` but not everything.
+ */
+function locatePackage(specifier: string, moduleBase: string): string {
+  let current = moduleBase
+  for (;;) {
+    const candidate = join(current, 'node_modules', ...specifier.split('/'))
+    if (existsSync(join(candidate, 'package.json'))) return candidate
     const parent = dirname(current)
     if (parent === current) break
     current = parent
   }
-  throw new LaunchResolutionError(`cannot locate the root of ${specifier}`)
+
+  // Last resort: a layout where the package is only reachable through the resolver.
+  try {
+    const manifest = createRequire(join(moduleBase, 'index.js')).resolve(`${specifier}/package.json`)
+    return dirname(manifest)
+  } catch {
+    throw new LaunchResolutionError(
+      `${specifier} is not installed under ${moduleBase}. Run "pnpm install" so the engine ships with the app.`
+    )
+  }
 }
 
 /**
  * pi ships a bundled CLI; the desktop app runs it through Electron's own Node so the
  * installer never depends on a Node installation on the user's machine.
  */
-export function resolvePiEntry(): string {
+export function resolvePiEntry(moduleBase?: string): string {
   const override = process.env['GENTLE_DESKTOP_PI_ENTRY']
   if (override) return resolve(override)
 
-  let root: string
-  try {
-    root = packageRoot(PI_PACKAGE)
-  } catch {
-    throw new LaunchResolutionError(
-      `${PI_PACKAGE} is not installed. Run "pnpm install" (or reinstall the app) so the engine ships with it.`
-    )
-  }
+  const root = locatePackage(PI_PACKAGE, moduleBaseOrDefault(moduleBase))
 
   const entry = join(root, 'dist', 'bundle', 'cli.js')
   if (!existsSync(entry)) {
@@ -95,16 +93,10 @@ export function resolvePiEntry(): string {
 }
 
 /** Root of the published gentle-pi package, loaded into pi with `-e`. */
-export function resolveGentlePiRoot(): string {
+export function resolveGentlePiRoot(moduleBase?: string): string {
   const override = process.env['GENTLE_DESKTOP_GENTLE_PI_ROOT']
   if (override) return resolve(override)
-
-  try {
-    return packageRoot(GENTLE_PI_PACKAGE)
-  } catch {
-    const entry = requireFromHere().resolve(GENTLE_PI_PACKAGE)
-    return packageRootByWalking(GENTLE_PI_PACKAGE, entry)
-  }
+  return locatePackage(GENTLE_PI_PACKAGE, moduleBaseOrDefault(moduleBase))
 }
 
 function userPiHome(): string {
@@ -146,12 +138,14 @@ export interface LaunchOptions {
   cwd?: string
   /** Ignore the home's extension declarations and load only gentle-pi. */
   takeOverExtensions?: boolean
+  /** Directory dependency resolution starts from; the packaged app passes `__dirname`. */
+  moduleBase?: string
 }
 
 export function buildLaunchPlan(options: LaunchOptions = {}): LaunchPlan {
   const home = resolveAgentHome()
-  const piEntry = resolvePiEntry()
-  const gentlePiRoot = resolveGentlePiRoot()
+  const piEntry = resolvePiEntry(options.moduleBase)
+  const gentlePiRoot = resolveGentlePiRoot(options.moduleBase)
   const cwd = resolve(options.cwd ?? process.cwd())
 
   const extensionArgs: string[] = []

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -125,5 +125,48 @@ test('a missing pi runtime fails loudly instead of starting a dead engine', () =
     assert.ok(plan.args[0].endsWith('cli.js'))
   } finally {
     restore()
+  }
+})
+
+
+test('the engine resolves without overrides, as the packaged app must', () => {
+  // The env overrides exist for packagers and for these tests, which is exactly why they
+  // hid a broken resolution path: pi restricts its exports, so `<pkg>/package.json` is not
+  // reachable and the real lookup has to survive that. This test removes the safety net.
+  const home = scratchHome()
+  const saved = {
+    home: process.env['GENTLE_SHELL_HOME'],
+    entry: process.env['GENTLE_DESKTOP_PI_ENTRY'],
+    root: process.env['GENTLE_DESKTOP_GENTLE_PI_ROOT']
+  }
+  process.env['GENTLE_SHELL_HOME'] = home
+  delete process.env['GENTLE_DESKTOP_PI_ENTRY']
+  delete process.env['GENTLE_DESKTOP_GENTLE_PI_ROOT']
+
+  try {
+    const plan = buildLaunchPlan({ cwd: home, moduleBase: repoRoot })
+    const described = plan.piEntry.toLowerCase()
+
+    assert.equal(existsSync(plan.piEntry), true, 'the resolved engine entry exists on disk')
+    assert.ok(described.includes('pi-coding-agent'), `resolved inside the pi package; got ${plan.piEntry}`)
+    assert.ok(described.includes('bundle'), `resolved to the bundled cli; got ${plan.piEntry}`)
+    assert.ok(described.endsWith('cli.js'), `resolved to the cli file; got ${plan.piEntry}`)
+
+    const gentleIndex = plan.args.indexOf('-e')
+    assert.notEqual(gentleIndex, -1, 'gentle-pi is injected as an extension root')
+    assert.equal(
+      existsSync(plan.args[gentleIndex + 1] ?? ''),
+      true,
+      'the extension root exists on disk'
+    )
+  } finally {
+    for (const [key, value] of [
+      ['GENTLE_SHELL_HOME', saved.home],
+      ['GENTLE_DESKTOP_PI_ENTRY', saved.entry],
+      ['GENTLE_DESKTOP_GENTLE_PI_ROOT', saved.root]
+    ] as const) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
   }
 })

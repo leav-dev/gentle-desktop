@@ -145,7 +145,7 @@ app.whenReady().then(() => {
   createWindow()
 
   // The engine starts with the app: the window is the only surface the user needs.
-  host.start({ cwd: process.env['GENTLE_DESKTOP_CWD'] ?? process.cwd() })
+  host.start({ cwd: process.env['GENTLE_DESKTOP_CWD'] ?? process.cwd(), moduleBase: __dirname })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
