@@ -6,54 +6,10 @@ import type {
   RepoStatus,
   SessionStats
 } from '../../../shared/ipc.ts'
-import type { AgentActivity } from '../state/agentActivity.ts'
-import { visibleRailSections } from '../state/railSections.ts'
+import { visibleIntegrations, visibleRailSections } from '../state/railSections.ts'
 
 /** Open tasks shown per feature before the row folds into "N more". */
 const MAX_OPEN_TASK_ROWS = 4
-const MAX_HELPER_ROWS = 8
-
-function statusGlyph(status: string): string {
-  switch (status) {
-    case 'running':
-      return '◐'
-    case 'waiting':
-      return '?'
-    case 'queued':
-      return '○'
-    case 'finished':
-      return '✓'
-    case 'error':
-      return '✗'
-    default:
-      return '○'
-  }
-}
-
-function statusClass(status: string): string {
-  switch (status) {
-    case 'running':
-      return 'run'
-    case 'waiting':
-      return 'warn'
-    case 'finished':
-      return 'ok'
-    case 'error':
-      return 'bad'
-    default:
-      return ''
-  }
-}
-
-function countsSummary(activity: AgentActivity): string {
-  const { running, queued, waiting, finished } = activity.counts
-  const parts: string[] = []
-  if (running > 0) parts.push(`${running} running`)
-  if (waiting > 0) parts.push(`${waiting} waiting`)
-  if (queued > 0) parts.push(`${queued} queued`)
-  if (finished > 0) parts.push(`${finished} finished`)
-  return parts.join(' · ')
-}
 
 function TasksSection({ tasks }: { tasks: readonly OddTaskFeature[] }): React.JSX.Element {
   const done = tasks.reduce((sum, feature) => sum + feature.done, 0)
@@ -85,27 +41,6 @@ function TasksSection({ tasks }: { tasks: readonly OddTaskFeature[] }): React.JS
             <p className="fold">{feature.open.length - MAX_OPEN_TASK_ROWS} more open</p>
           ) : null}
         </div>
-      ))}
-    </section>
-  )
-}
-
-function HelpersSection({ activity }: { activity: AgentActivity }): React.JSX.Element {
-  const summary = countsSummary(activity)
-  return (
-    <section>
-      <h2>
-        <b>▾ Helpers</b>
-        {summary.length > 0 ? <span className="count">{summary}</span> : null}
-      </h2>
-      {activity.tasks.slice(0, MAX_HELPER_ROWS).map((task, index) => (
-        <p key={`${task.label}-${index}`}>
-          <span className="task">
-            <span className={statusClass(task.status)}>{statusGlyph(task.status)}</span>{' '}
-            {task.label.length > 0 ? task.label : task.agent}
-          </span>
-          {task.lastStep.length > 0 ? <span className="meta">{task.lastStep}</span> : null}
-        </p>
       ))}
     </section>
   )
@@ -154,6 +89,8 @@ function StatusSection({
   const healthy = phase === 'ready'
   const messages = typeof stats?.totalMessages === 'number' ? stats.totalMessages : null
   const identity = sessionName !== null && sessionName.length > 0 ? sessionName : 'untitled session'
+  // Retired from the view, not from the session: the entry still arrives, it is not drawn.
+  const integrationsShown = visibleIntegrations(integrations)
 
   return (
     <section className="rail-status">
@@ -185,10 +122,10 @@ function StatusSection({
       ) : null}
       {/* Integrations and Profiles are groups of the session's state, not sections of their
           own: they answer "what else is attached to this session" once the basics are read. */}
-      {integrations.length > 0 ? (
+      {integrationsShown.length > 0 ? (
         <>
           <p className="rail-subhead">Integrations</p>
-          {integrations.map((entry) => (
+          {integrationsShown.map((entry) => (
             <p key={entry.key}>
               <span className="task">{entry.text}</span>
             </p>
@@ -217,7 +154,6 @@ function StatusSection({
  */
 export function Rail({
   tasks,
-  activity,
   integrations,
   activeProfile,
   status,
@@ -227,7 +163,6 @@ export function Rail({
   sessionName
 }: {
   tasks: readonly OddTaskFeature[]
-  activity: AgentActivity
   integrations: readonly { key: string; text: string }[]
   activeProfile: ActiveProfile | null
   status: HostStatus
@@ -236,7 +171,7 @@ export function Rail({
   repo: RepoStatus | null
   sessionName: string | null
 }): React.JSX.Element {
-  const sections = visibleRailSections({ tasks, activity, repo, sessionName })
+  const sections = visibleRailSections({ tasks, repo, sessionName })
   return (
     <aside className="rail" aria-label="Session rail">
       {sections.includes('status') ? (
@@ -252,7 +187,6 @@ export function Rail({
         />
       ) : null}
       {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}
-      {sections.includes('helpers') ? <HelpersSection activity={activity} /> : null}
     </aside>
   )
 }

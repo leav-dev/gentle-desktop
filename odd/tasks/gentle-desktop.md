@@ -51,8 +51,9 @@ S10. The app honours the provider configuration gentle-shell already has, includ
     otros provedores de los que me esta mostrando la app".
 
 S11. The layout mirrors the Gentle Shell terminal: header row, transcript, a fixed 50-column
-    rail ordered Tasks → Jobs → Helpers → Session, a petal prompt panel and one full-width
-    status bar; the rail collapses below 140 columns. The palette is the one Gentle Shell
+    rail ordered Status → Tasks, a petal prompt panel; the rail collapses below 140 columns.
+    There is no Helpers section: subagent activity is read in the Agents window, not in the
+    rail, so the rail never repeats what a whole window already shows. The palette is the one Gentle Shell
     gives a new user (Gentleman-Cute). Chosen direction: artboard
     `design/gentle-layout/01-terminal-faithful.html`.
 
@@ -283,3 +284,7 @@ L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in
     `docs/readme-reference.md` and `docs/gentle-agents-activity.md`. The desktop host is
     the sanctioned integration path, so the TUI render layer is the only thing replaced.
+
+L18. User instruction, verbatim: "retiraremos la seccionde helpers del layout". The rail keeps
+    Status and Tasks; subagent activity stays available in the Agents window and its data
+    plumbing is unchanged.

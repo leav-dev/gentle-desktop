@@ -71,25 +71,22 @@ test('null and undefined payloads (no widget push yet) yield an empty section', 
   assert.deepEqual(parseAgentActivity(undefined), emptyAgentActivity())
 })
 
-test('empty helper activity leaves no Helpers section in the rail', () => {
+test('the rail has no Helpers section, even while subagents run', () => {
+  // Retired from the layout (spec L18): the Agents window shows this, with room for it.
+  // Keeping the assertion means nobody can quietly reintroduce a section that repeats it.
   const sections = visibleRailSections({
     tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
-    activity: emptyAgentActivity(),
     repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
-    sessionName: null
+    sessionName: 'review'
   })
   assert.deepEqual(sections, ['status', 'tasks'])
 })
 
-test('the rail keeps the fixed order Status → Tasks → Helpers', () => {
+test('an empty task list keeps Status and drops Tasks, in that order', () => {
   const sections = visibleRailSections({
-    tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
-    activity: {
-      counts: { running: 1, queued: 0, waiting: 0, finished: 0 },
-      tasks: [{ label: 'a', status: 'running', agent: 'x', lastStep: '' }]
-    },
-    repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
-    sessionName: 'review'
+    tasks: [],
+    repo: null,
+    sessionName: null
   })
-  assert.deepEqual(sections, ['status', 'tasks', 'helpers'])
+  assert.deepEqual(sections, ['status'], 'Status is never absent')
 })

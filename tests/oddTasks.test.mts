@@ -74,22 +74,13 @@ test('every markdown file becomes one feature with its own counts', () => {
 })
 
 test('an empty task list yields no Tasks section, and sections keep their fixed order', () => {
-  const withoutTasks = visibleRailSections({
-    tasks: [],
-    activity: {
-      counts: { running: 1, queued: 0, waiting: 0, finished: 0 },
-      tasks: [{ label: 'explore', status: 'running', agent: 'explore', lastStep: '' }]
-    },
-    repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
-    sessionName: 'review'
-  })
-  assert.deepEqual(withoutTasks, ['status', 'helpers'], 'no Tasks header with a zero count')
+  const withoutTasks = visibleRailSections({ tasks: [], repo: null, sessionName: 'review' })
+  assert.deepEqual(withoutTasks, ['status'], 'no Tasks header with a zero count')
 
   const withTasks = visibleRailSections({
     tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
-    activity: emptyAgentActivity(),
     repo: null,
     sessionName: 'review'
   })
-  assert.deepEqual(withTasks, ['status', 'tasks'], 'no Helpers section when nothing runs')
+  assert.deepEqual(withTasks, ['status', 'tasks'], 'Tasks follows Status, and nothing follows Tasks')
 })

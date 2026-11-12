@@ -234,7 +234,6 @@ export function App(): React.JSX.Element {
         {railWide ? (
           <Rail
           tasks={engine.oddTasks}
-          activity={engine.activity}
           integrations={engine.integrations}
           activeProfile={engine.activeProfile}
           status={engine.status}
@@ -247,7 +246,6 @@ export function App(): React.JSX.Element {
           <div className="rail-overlay">
             <Rail
               tasks={engine.oddTasks}
-              activity={engine.activity}
               integrations={engine.integrations}
               activeProfile={engine.activeProfile}
               status={engine.status}
