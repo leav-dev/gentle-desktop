@@ -78,10 +78,10 @@ test('empty helper activity leaves no Helpers section in the rail', () => {
     repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
     sessionName: null
   })
-  assert.deepEqual(sections, ['tasks', 'session'])
+  assert.deepEqual(sections, ['tasks', 'status'])
 })
 
-test('the rail keeps the fixed order Tasks → Helpers → Session', () => {
+test('the rail keeps the fixed order Tasks → Helpers → Status', () => {
   const sections = visibleRailSections({
     tasks: [{ feature: 'x', done: 0, total: 1, open: ['a'] }],
     activity: {
@@ -91,5 +91,5 @@ test('the rail keeps the fixed order Tasks → Helpers → Session', () => {
     repo: { branch: 'main', dirtyCount: 1, added: 1, removed: 0, files: ['a'] },
     sessionName: 'review'
   })
-  assert.deepEqual(sections, ['tasks', 'helpers', 'session'])
+  assert.deepEqual(sections, ['tasks', 'helpers', 'status'])
 })

@@ -92,14 +92,18 @@ test('collectRepoStatus reads a real repository: branch, dirty count, and untrac
   }
 })
 
-test('a clean repository with no session name leaves no session section in the rail', () => {
+test('Status is the one section that survives an otherwise empty rail', () => {
   const sections = visibleRailSections({
     tasks: [],
     activity: { counts: { running: 0, queued: 0, waiting: 0, finished: 0 }, tasks: [] },
     repo: { branch: 'main', dirtyCount: 0, added: 0, removed: 0, files: [] },
     sessionName: null
   })
-  assert.deepEqual(sections, [], 'an empty data source yields no section at all')
+  assert.deepEqual(
+    sections,
+    ['status'],
+    'an empty data source yields no section, except Status, which always has an answer'
+  )
 })
 
 

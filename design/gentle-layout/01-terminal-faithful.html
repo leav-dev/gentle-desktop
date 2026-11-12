@@ -303,8 +303,14 @@
           <p><span class="task"><span class="warn">?</span> approve: write styles.css</span><span class="meta">needs you</span></p>
         </section>
 
-        <section>
-          <h2><b>▾ SESSION</b><span>review</span></h2>
+        <!-- Status is the rail's anchor: unlike every other section it is always drawn,
+             because "is the agent healthy, what is it allowed to do, and which session is
+             this" are questions with an answer at all times. -->
+        <section class="rail-status">
+          <h2><b>▾ STATUS</b><span>ready</span></h2>
+          <p><span class="task"><span class="ok">✿</span> engine ready</span><span class="meta">2 restarts</span></p>
+          <p><span class="task">permission guarded</span><span class="meta">⌘,</span></p>
+          <p><span class="task">Fold the rail at 140 cols</span><span class="meta">24 msgs</span></p>
           <p><span class="task">✎ <span class="add">+42</span> <span class="del">−7</span> · 3 files</span><span class="meta">dirty</span></p>
           <p class="fold">⌥⏎ opens the review gate</p>
         </section>

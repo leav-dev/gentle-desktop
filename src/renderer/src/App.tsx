@@ -204,12 +204,23 @@ export function App(): React.JSX.Element {
           />
         </section>
         {railWide ? (
-          <Rail tasks={engine.oddTasks} activity={engine.activity} repo={engine.repo} sessionName={engine.sessionName} />
+          <Rail
+          tasks={engine.oddTasks}
+          activity={engine.activity}
+          status={engine.status}
+          permissionMode={engine.permissionMode}
+          stats={engine.stats}
+          repo={engine.repo}
+          sessionName={engine.sessionName}
+        />
         ) : railOverlayOpen ? (
           <div className="rail-overlay">
             <Rail
               tasks={engine.oddTasks}
               activity={engine.activity}
+              status={engine.status}
+              permissionMode={engine.permissionMode}
+              stats={engine.stats}
               repo={engine.repo}
               sessionName={engine.sessionName}
             />

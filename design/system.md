@@ -82,7 +82,11 @@ and the brand petal. Dim is metadata only.
 - **Rail sections** — `▾ NAME` + count. The set is predefined and the order is fixed:
   Tasks → Jobs → Helpers → Session. Section headers are not buttons; the whole section is
   scannable.
-- **An unused rail section is not rendered at all** — no empty panel, no placeholder row, no
+- **Status is always visible.** It is the rail's only permanent section: engine health,
+  permission mode, the session identity with its message count, and the working-tree
+  changes. These are questions that have an answer at all times, so an empty Status section
+  is not a state — it is a defect.
+- **An unused rail section is not rendered at all** (Status excepted) — no empty panel, no placeholder row, no
   zero count. A window with no background job shows Tasks, Helpers and Session, and nothing
   where Jobs would be; the remaining sections do not renumber or change appearance.
 - **Tool card** — bordered, title in `--champagne`, status glyph, elapsed time at the right

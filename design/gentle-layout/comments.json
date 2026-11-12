@@ -63,9 +63,9 @@
       "excerpt": "▾ TASKS 2/6 ◐ Fold the rail at 140 cols 12m ○ Fix transcript scroll pending ✓ 4 done ▾ HELPERS 1 running · 1 waiting ◐ map transcript data sources explore · 12.4k ? approve: write styles.css needs you ▾ SESSION review ✎ +42 −7 · 3 files dirty ⌥⏎ opens the review gate",
       "comment": "no veo una seccion del estatus, esa esa seccion que siempre esta visible",
       "createdAt": "2026-11-12T03:15:10.309Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-12T03:15:10.381Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-12T03:18:53.747Z"
     }
   ]
 }

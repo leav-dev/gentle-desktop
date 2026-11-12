@@ -1,4 +1,10 @@
-import type { OddTaskFeature, RepoStatus } from '../../../shared/ipc.ts'
+import type {
+  AgentPermissionMode,
+  HostStatus,
+  OddTaskFeature,
+  RepoStatus,
+  SessionStats
+} from '../../../shared/ipc.ts'
 import type { AgentActivity } from '../state/agentActivity.ts'
 import { visibleRailSections } from '../state/railSections.ts'
 
@@ -104,20 +110,66 @@ function HelpersSection({ activity }: { activity: AgentActivity }): React.JSX.El
   )
 }
 
-function SessionSection({
+const PHASE_LABELS: Record<HostStatus['phase'], string> = {
+  ready: 'ready',
+  starting: 'starting…',
+  restarting: 'reconnecting…',
+  crashed: 'stopped',
+  stopped: 'stopped'
+}
+
+const MODE_LABELS: Record<AgentPermissionMode, string> = {
+  normal: 'guarded',
+  auto: 'auto',
+  yolo: 'yolo',
+  'super-yolo': 'super-yolo'
+}
+
+/**
+ * The rail's permanent section: engine health, what the agent is allowed to do, which
+ * session this is, and the working tree. Always drawn — an absent Status section would
+ * leave the user without an answer to questions that always have one.
+ */
+function StatusSection({
+  phase,
+  restarts,
+  permissionMode,
+  stats,
   repo,
   sessionName
 }: {
+  phase: HostStatus['phase']
+  restarts: number
+  permissionMode: AgentPermissionMode
+  stats: SessionStats | null
   repo: RepoStatus | null
   sessionName: string | null
 }): React.JSX.Element {
   const dirty = repo !== null && repo.dirtyCount > 0
+  const healthy = phase === 'ready'
+  const messages = typeof stats?.totalMessages === 'number' ? stats.totalMessages : null
+  const identity = sessionName !== null && sessionName.length > 0 ? sessionName : 'untitled session'
+
   return (
-    <section>
+    <section className="rail-status">
       <h2>
-        <b>▾ Session</b>
-        {sessionName !== null && sessionName.length > 0 ? <span>{sessionName}</span> : null}
+        <b>▾ Status</b>
+        <span className={healthy ? 'ok' : 'bad'}>{PHASE_LABELS[phase]}</span>
       </h2>
+      <p>
+        <span className="task">
+          <span className={healthy ? 'ok' : 'bad'}>{healthy ? '✿' : '✗'}</span> engine{' '}
+          {PHASE_LABELS[phase]}
+        </span>
+        {restarts > 0 ? <span className="meta">{restarts} restarts</span> : null}
+      </p>
+      <p>
+        <span className="task">permission {MODE_LABELS[permissionMode]}</span>
+      </p>
+      <p>
+        <span className="task">{identity}</span>
+        {messages !== null ? <span className="meta">{messages} msgs</span> : null}
+      </p>
       {dirty && repo !== null ? (
         <p>
           <span className="task">
@@ -139,11 +191,17 @@ function SessionSection({
 export function Rail({
   tasks,
   activity,
+  status,
+  permissionMode,
+  stats,
   repo,
   sessionName
 }: {
   tasks: readonly OddTaskFeature[]
   activity: AgentActivity
+  status: HostStatus
+  permissionMode: AgentPermissionMode
+  stats: SessionStats | null
   repo: RepoStatus | null
   sessionName: string | null
 }): React.JSX.Element {
@@ -152,7 +210,16 @@ export function Rail({
     <aside className="rail" aria-label="Session rail">
       {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}
       {sections.includes('helpers') ? <HelpersSection activity={activity} /> : null}
-      {sections.includes('session') ? <SessionSection repo={repo} sessionName={sessionName} /> : null}
+      {sections.includes('status') ? (
+        <StatusSection
+          phase={status.phase}
+          restarts={status.restarts}
+          permissionMode={permissionMode}
+          stats={stats}
+          repo={repo}
+          sessionName={sessionName}
+        />
+      ) : null}
     </aside>
   )
 }
