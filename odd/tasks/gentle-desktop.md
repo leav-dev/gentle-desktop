@@ -44,6 +44,12 @@ S9. Provider registration runs behind the app, driven from a configuration windo
     poara registrar el proveedor, se puede hacer una ventana que solite su configuracion
     sintener que mostrar la terminal".
 
+S10. The app honours the provider configuration gentle-shell already has, including
+    providers that gentle-pi contributes at runtime, and keeps as much of that setup as
+    possible. User's words: "puedes usar la configuracion de proveedores de gentle-shell,
+    la idea es tratar de manetener lo mas posible de el, y genlte-shell tie configurado
+    otros provedores de los que me esta mostrando la app".
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
@@ -69,6 +75,10 @@ T7. [x] Permission and review-consent prompts rendered and answered from the app
 T9. [x] First-run setup: detect an already configured provider with the non-interactive
     readiness check, and otherwise drive provider registration from a configuration window
     with no visible terminal. — S8, S9
+T12. [x] Offer every provider the running engine reports, not only those with a login
+    flow, and let a ready provider be chosen by picking one of its models. — S10
+T13. Support providers that need a custom base URL by writing pi's own configuration,
+    instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
     that never asks for a terminal command. Commit 8. — S1, S6
 T8. Packaging: installers for Windows and macOS, MIT license and attribution, README that
@@ -98,6 +108,11 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E11 The setup window hid the user's own provider. `nan` is not missing from pi's
+  catalogue by accident: `gentle-pi/lib/nan-provider.ts` declares `NAN_PROVIDER_ID = "nan"`
+  and registers it as a runtime extension. A bare SDK runtime therefore reports 43
+  providers without `nan`, while the engine offers its models. The provider list must come
+  from the engine; the SDK only contributes which providers have a login flow.
 - E10 The first packaged launch failed with "engine is not running (phase: crashed)".
   Root cause: pi declares `exports` with an `import` condition only, so
   `require.resolve("<pkg>/package.json")` throws and the engine entry never resolved — in
@@ -144,6 +159,13 @@ L9. Evidence: `pi auth check --provider <p> --json` reports `ready`/`not_ready`/
     with exit codes 0/1/2 and needs no TTY, so the app can detect readiness itself;
     `pi auth login` is documented as requiring an interactive terminal, which the app must
     satisfy behind its own window. Credentials live in `<agent-dir>/auth.json`.
+
+L11. Correction from the user, verbatim: "no veo la opciond e registrar mi proveedor de nan,
+    puedes usar la configuracion de proveedores de gentle-shell, la idea es tratar de
+    manetener lo mas posible de el, y genlte-shell tie configurado otros provedores de los
+    que me esta mostrando la app". The defect was in this fork, not upstream: the setup
+    window filtered to providers with a login flow and sourced its catalogue from the SDK
+    instead of the running engine.
 
 L10. Decision: provider registration uses pi's SDK `login` with an `AuthInteraction`
     implemented as GUI prompts (text, secret, select, manual_code) plus rendered

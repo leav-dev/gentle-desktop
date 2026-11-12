@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { ModelRuntime } from '@earendil-works/pi-coding-agent'
 import type { AuthEvent, AuthInteraction, AuthPrompt, AuthType } from '@earendil-works/pi-ai'
-import type { ProviderChoice } from '../shared/ipc.ts'
+import type { EngineModelRef, ProviderChoice } from '../shared/ipc.ts'
 
 /**
  * Provider registration, driven by the app instead of a terminal.
@@ -44,18 +44,39 @@ export function invalidateAuthRuntime(): void {
 }
 
 /**
- * Every provider the app can register, with the methods it supports and whether it is
- * already configured. Ambient-only providers are excluded: offering a button that cannot
- * work is worse than omitting it.
+ * Every provider the app can offer, merged from both catalogues.
+ *
+ * The SDK knows which providers have a login flow. The running engine knows which providers
+ * can actually be used right now — and that set is larger, because extensions contribute
+ * providers at runtime (gentle-pi adds `nan` that way). Listing only the SDK's providers
+ * hides the provider the user is already working with, which is precisely the wrong thing
+ * to do in a setup window.
+ *
+ * Ambient-only providers with no login and no models are still excluded: offering a button
+ * that cannot work is worse than omitting it.
  */
-export async function listProviderChoices(home: string): Promise<ProviderChoice[]> {
+export async function listProviderChoices(
+  home: string,
+  engineModels: readonly EngineModelRef[] = []
+): Promise<ProviderChoice[]> {
   const runtime = await runtimeFor(home)
 
-  const choices: ProviderChoice[] = []
+  const modelsByProvider = new Map<string, EngineModelRef[]>()
+  for (const model of engineModels) {
+    const existing = modelsByProvider.get(model.provider) ?? []
+    if (!existing.some((entry) => entry.id === model.id)) existing.push(model)
+    modelsByProvider.set(model.provider, existing)
+  }
+
+  const choices = new Map<string, ProviderChoice>()
+
   for (const provider of runtime.getProviders()) {
     const supportsOauth = provider.auth.oauth !== undefined
     const supportsApiKey = provider.auth.apiKey?.login !== undefined
-    if (!supportsOauth && !supportsApiKey) continue
+    const models = modelsByProvider.get(provider.id) ?? []
+    const ready = models.length > 0
+
+    if (!supportsOauth && !supportsApiKey && !ready) continue
 
     let configured = false
     try {
@@ -64,19 +85,35 @@ export async function listProviderChoices(home: string): Promise<ProviderChoice[
       // A provider whose status cannot be read is offered as unconfigured.
     }
 
-    choices.push({
+    choices.set(provider.id, {
       id: provider.id,
       name: provider.name,
       supportsOauth,
       supportsApiKey,
       ...(provider.auth.apiKey?.name ? { apiKeyLabel: provider.auth.apiKey.name } : {}),
       ...(provider.auth.oauth?.loginLabel ? { oauthLabel: provider.auth.oauth.loginLabel } : {}),
-      configured
+      configured,
+      ready,
+      models
     })
   }
 
-  choices.sort((left, right) => left.name.localeCompare(right.name))
-  return choices
+  // Providers only the engine knows: contributed by an extension, so no login flow exists
+  // to offer, but they work and must be visible.
+  for (const [id, models] of modelsByProvider) {
+    if (choices.has(id)) continue
+    choices.set(id, {
+      id,
+      name: id,
+      supportsOauth: false,
+      supportsApiKey: false,
+      configured: true,
+      ready: true,
+      models
+    })
+  }
+
+  return [...choices.values()].sort((left, right) => left.name.localeCompare(right.name))
 }
 
 export async function providerConfigured(home: string, providerId: string): Promise<boolean> {

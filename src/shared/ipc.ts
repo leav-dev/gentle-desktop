@@ -24,6 +24,7 @@ export const IPC = {
   sessionNew: 'session:new',
   sessionState: 'session:get-state',
   sessionMessages: 'session:get-messages',
+  sessionSetModel: 'session:set-model',
   sessionsList: 'sessions:list',
   sessionsSwitch: 'sessions:switch',
   dialogAnswer: 'dialog:answer',
@@ -71,7 +72,21 @@ export interface PromptRequest {
   message: string
 }
 
-/** A provider the setup window can offer, and how it can be registered. */
+/** One model the running engine can actually use right now. */
+export interface EngineModelRef {
+  provider: string
+  id: string
+  name?: string
+}
+
+/**
+ * A provider the setup window can offer, and how it can be registered.
+ *
+ * `ready` is what matters to a user: it means the engine already reports models for this
+ * provider, so there is nothing to set up. A provider can be ready without any login flow —
+ * gentle-pi contributes `nan` exactly that way — and hiding those would hide the provider
+ * the user is already working with.
+ */
 export interface ProviderChoice {
   id: string
   name: string
@@ -80,6 +95,9 @@ export interface ProviderChoice {
   apiKeyLabel?: string
   oauthLabel?: string
   configured: boolean
+  ready: boolean
+  /** Models the engine offers for this provider, ready to pass to `set_model`. */
+  models: EngineModelRef[]
 }
 
 export type AuthMethod = 'oauth' | 'api_key'
@@ -122,6 +140,7 @@ export interface GentleApi {
     newSession: () => Promise<void>
     state: () => Promise<SessionState | null>
     messages: () => Promise<unknown[]>
+    setModel: (provider: string, modelId: string) => Promise<void>
     answerDialog: (response: ExtensionUiResponse) => void
   }
   auth: {

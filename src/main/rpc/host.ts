@@ -1,5 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import type { HostStatus } from '../../shared/ipc.ts'
+import type { EngineModelRef, HostStatus } from '../../shared/ipc.ts'
 import type {
   DialogRequest,
   ExtensionUiRequest,
@@ -123,6 +123,34 @@ export class PiHost {
     const state = await this.#require().request<SessionState>({ type: 'get_state' })
     this.#streaming = state?.isStreaming === true
     return state ?? null
+  }
+
+  /**
+   * Models the running engine actually offers.
+   *
+   * This is the only honest catalogue: extensions contribute providers at runtime, so a
+   * bare SDK lookup misses every provider they add.
+   */
+  async availableModels(): Promise<EngineModelRef[]> {
+    const payload = await this.#require().request<{ models?: unknown }>({ type: 'get_available_models' })
+    const models = Array.isArray(payload?.models) ? payload.models : []
+
+    const refs: EngineModelRef[] = []
+    for (const raw of models) {
+      if (typeof raw !== 'object' || raw === null) continue
+      const model = raw as { provider?: unknown; id?: unknown; name?: unknown }
+      if (typeof model.provider !== 'string' || typeof model.id !== 'string') continue
+      refs.push({
+        provider: model.provider,
+        id: model.id,
+        ...(typeof model.name === 'string' ? { name: model.name } : {})
+      })
+    }
+    return refs
+  }
+
+  async setModel(provider: string, modelId: string): Promise<void> {
+    await this.#require().request({ type: 'set_model', provider, modelId })
   }
 
   async messages(): Promise<unknown[]> {

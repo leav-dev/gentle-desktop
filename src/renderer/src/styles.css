@@ -794,3 +794,14 @@ body {
   font-size: 12px;
   line-height: 1.5;
 }
+
+.wizard-badge-ready {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+
+.wizard-method-active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}

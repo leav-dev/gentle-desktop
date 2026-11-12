@@ -177,3 +177,50 @@ test('invalidateAuthRuntime makes a later status read reflect the credential wri
     'a fresh runtime reads the credential from disk'
   )
 })
+
+test('a provider the engine offers but the SDK does not know is still offered as ready', async () => {
+  // gentle-pi contributes `nan` at runtime, so it exists only inside the engine. Listing
+  // the SDK catalogue alone hid the very provider the user was already working with.
+  const home = freshHome()
+  const choices = await listProviderChoices(home, [
+    { provider: 'nan', id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash' },
+    { provider: 'nan', id: 'glm5.3', name: 'GLM 5.3' }
+  ])
+
+  const nan = choices.find((choice) => choice.id === 'nan')
+  assert.ok(nan, 'the extension-contributed provider is offered')
+  assert.equal(nan.ready, true, 'it is usable without any sign-in')
+  assert.equal(nan.supportsOauth, false)
+  assert.equal(nan.supportsApiKey, false)
+  assert.deepEqual(
+    nan.models.map((model) => model.id),
+    ['deepseek-v4-flash', 'glm5.3'],
+    'model ids survive, because choosing a provider means choosing a model to set'
+  )
+})
+
+test('a provider with no login flow and no engine models is not offered', async () => {
+  const home = freshHome()
+  const withModels = await listProviderChoices(home, [{ provider: 'nan', id: 'm1', name: 'M1' }])
+  const withoutModels = await listProviderChoices(home, [])
+
+  assert.ok(withModels.some((choice) => choice.id === 'nan'), 'present when the engine reports it')
+  assert.equal(
+    withoutModels.some((choice) => choice.id === 'nan'),
+    false,
+    'absent when nothing can use it, instead of offering a button that cannot work'
+  )
+})
+
+test('every offered provider is either registrable or already usable', async () => {
+  const home = freshHome()
+  const choices = await listProviderChoices(home, [{ provider: 'nan', id: 'm1', name: 'M1' }])
+
+  for (const choice of choices) {
+    assert.ok(
+      choice.supportsOauth || choice.supportsApiKey || choice.ready,
+      `${choice.id} is offered for a reason`
+    )
+  }
+  assert.ok(choices.length > 1, 'the built-in catalogue is still offered alongside the engine one')
+})

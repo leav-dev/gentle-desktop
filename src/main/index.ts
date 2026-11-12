@@ -61,8 +61,24 @@ function registerIpc(instance: PiHost): void {
 
   ipcMain.handle(IPC.authProviders, async () => {
     const home = agentHome()
-    return home ? listProviderChoices(home) : []
+    if (!home) return []
+
+    // The engine is the only catalogue that includes extension-contributed providers, so a
+    // failure to ask it must not silently collapse the list to the SDK's providers.
+    let engineModels: Awaited<ReturnType<typeof instance.availableModels>> = []
+    try {
+      engineModels = await instance.availableModels()
+    } catch (error) {
+      process.stderr.write(`[auth] engine catalogue unavailable: ${error instanceof Error ? error.message : String(error)}
+`)
+    }
+
+    return listProviderChoices(home, engineModels)
   })
+
+  ipcMain.handle(IPC.sessionSetModel, async (_event, request: { provider: string; modelId: string }) =>
+    instance.setModel(request.provider, request.modelId)
+  )
 
   ipcMain.handle(IPC.authConfigured, async (_event, providerId: string) => {
     const home = agentHome()

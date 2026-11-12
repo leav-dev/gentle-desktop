@@ -55,6 +55,7 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
   const [statusLine, setStatusLine] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [connectedId, setConnectedId] = useState<string | null>(null)
+  const [usingModel, setUsingModel] = useState<{ providerId: string; modelId: string } | null>(null)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
   const firstOptionRef = useRef<HTMLButtonElement | null>(null)
@@ -175,6 +176,23 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
     }
   }, [activePrompt, connecting])
 
+  /**
+   * Providers the engine already offers need no sign-in at all: choosing one means choosing
+   * a model, and that is a single `set_model` call.
+   */
+  const useModel = useCallback(async (providerId: string, modelId: string) => {
+    try {
+      await window.gentle.session.setModel(providerId, modelId)
+      setUsingModel({ providerId, modelId })
+      setOutcome(null)
+    } catch (error) {
+      setOutcome({
+        message: `That model could not be selected. ${error instanceof Error ? error.message : ''}`.trim(),
+        cancelled: false
+      })
+    }
+  }, [])
+
   const startLogin = useCallback(
     async (provider: ProviderChoice, method: AuthMethod): Promise<void> => {
       setOutcome(null)
@@ -252,7 +270,8 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
           </button>
         </div>
         <p className="wizard-subtitle">
-          Sign in once. The app keeps the connection and asks again only if it expires.
+          Pick what you already have, or sign in once. The app keeps the connection and asks
+          again only if it expires.
         </p>
 
         {providers === null ? (
@@ -265,13 +284,37 @@ export function SetupWizard({ onClose }: { onClose: () => void }): React.JSX.Ele
           <ul className="wizard-providers">
             {providers.map((provider) => {
               const connected = provider.configured || connectedId === provider.id
+              const models = provider.models
               return (
                 <li key={provider.id} className="wizard-provider">
                   <div className="wizard-provider-name">
                     {provider.name}
                     {connected ? <span className="wizard-badge">Connected</span> : null}
+                    {!connected && provider.ready ? (
+                      <span className="wizard-badge wizard-badge-ready">Ready</span>
+                    ) : null}
                   </div>
-                  {!connected ? (
+                  {provider.ready && models.length > 0 ? (
+                    <div className="wizard-methods">
+                      {models.map((model) => {
+                        const active =
+                          usingModel?.providerId === provider.id && usingModel.modelId === model.id
+                        return (
+                          <button
+                            key={model.id}
+                            type="button"
+                            className={`wizard-method${active ? ' wizard-method-active' : ''}`}
+                            onClick={() => {
+                              void useModel(provider.id, model.id)
+                            }}
+                          >
+                            {model.name ?? model.id}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+                  {!connected && !provider.ready ? (
                     <div className="wizard-methods">
                       {methodButtons(provider).map((button) => (
                         <button

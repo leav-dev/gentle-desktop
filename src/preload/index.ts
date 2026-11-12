@@ -66,6 +66,8 @@ const api: GentleApi = {
     newSession: () => ipcRenderer.invoke(IPC.sessionNew) as Promise<void>,
     state: () => ipcRenderer.invoke(IPC.sessionState) as Promise<SessionState | null>,
     messages: () => ipcRenderer.invoke(IPC.sessionMessages) as Promise<unknown[]>,
+    setModel: (provider: string, modelId: string) =>
+      ipcRenderer.invoke(IPC.sessionSetModel, { provider, modelId }) as Promise<void>,
     answerDialog: (response: ExtensionUiResponse) => {
       ipcRenderer.send(IPC.dialogAnswer, response)
     }
