@@ -87,10 +87,11 @@ T9. [x] First-run setup: detect an already configured provider with the non-inte
     with no visible terminal. — S8, S9
 T12. [x] Offer every provider the running engine reports, not only those with a login
     flow, and let a ready provider be chosen by picking one of its models. — S10
-T19. Rebuild the window shell as the terminal layout: header row, transcript, 50-column rail
+T19. [x] Rebuild the window shell as the terminal layout: header row, transcript, 50-column rail
     with real data (agent activity, session stats, repository changes, ODD tasks), petal
-    prompt panel and the status bar, in the Gentleman-Cute palette. — S11
-T20. Replace the session sidebar with a history picker opened on demand. — S12
+    prompt panel and the status bar, in the Gentleman-Cute palette. Done in d3faf02. — S11
+T20. [x] Replace the session sidebar with a history picker opened on demand. Done in
+    d3faf02. — S12
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
@@ -122,6 +123,12 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E13 The delivered git porcelain parsing was wrong in two ways, and neither showed up in
+  the handoff summary: it split renames on numstat's ` => ` arrow instead of porcelain's
+  ` -> `, and then advanced the index by one for a continuation record that porcelain v1
+  does not write. A rename therefore reported the whole `old -> new` string and swallowed
+  the entry after it. Verified against real `git status --porcelain=v1` output and pinned
+  by `tests/repoStatus.test.mts`.
 - E12 Repackaging while the previous build was still running produced an app that exited
   with code 1 and wrote no message. Windows will not replace a mapped executable, so
   `release/` ended up half-written while `scripts/verify-package.mjs` still passed: it
