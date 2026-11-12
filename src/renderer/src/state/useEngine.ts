@@ -10,6 +10,7 @@ import type {
   SubscriptionUsage
 } from '../../../shared/ipc.ts'
 import { modelRef } from './format.ts'
+import { shouldShowNotice } from './noticeFilter.ts'
 import {
   appendUserMessage,
   hydrateTranscript,
@@ -162,6 +163,9 @@ export function useEngine(): EngineView {
       if (request.method === 'setWidget' && request.widgetKey === ACTIVITY_WIDGET_KEY) {
         setActivity(parseAgentActivity(request.widgetLines?.[0] ?? null))
       } else if (request.method === 'notify') {
+        // Some extensions narrate their own housekeeping; a toast over the composer for it
+        // costs more than it tells. The notice is dropped at the view, not at the engine.
+        if (!shouldShowNotice(request.message)) return
         notifySeq.current += 1
         setNotice({
           id: notifySeq.current,

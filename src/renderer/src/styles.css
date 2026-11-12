@@ -284,6 +284,14 @@ body {
   gap: 10px;
 }
 
+/* Flex items shrink by default, and a tool payload is a scrolling <pre> whose automatic
+   minimum size is zero — so once the conversation grew past the viewport, every tool card
+   collapsed to its two borders and read as a few stray lines under the message above it.
+   A transcript row is read, not fitted: it never compresses. */
+.transcript > * {
+  flex-shrink: 0;
+}
+
 .transcript-empty {
   margin: auto;
   color: var(--dim);
