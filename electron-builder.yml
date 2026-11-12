@@ -64,4 +64,8 @@ mac:
 linux:
   target:
     - AppImage
+  # Linux takes a PNG and nothing else. Without this line electron-builder tries to convert
+  # the Windows .ico and fails with "unknown output format set", which names neither the
+  # platform nor the file.
+  icon: build/icon.png
   category: Development

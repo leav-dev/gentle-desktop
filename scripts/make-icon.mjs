@@ -46,16 +46,22 @@ function insideFlower(x, y) {
 }
 
 // --- rasterize --------------------------------------------------------------
-function rasterize() {
+/**
+ * Draws the mark at any square size. The geometry constants are expressed in 256px space,
+ * so a larger canvas scales the sample point instead of the constants: one set of numbers,
+ * and every size is the same drawing.
+ */
+function rasterize(size) {
+  const scale = size / SIZE;
   const rows = [];
-  for (let py = 0; py < SIZE; py++) {
-    const row = Buffer.alloc(SIZE * 4);
-    for (let px = 0; px < SIZE; px++) {
+  for (let py = 0; py < size; py++) {
+    const row = Buffer.alloc(size * 4);
+    for (let px = 0; px < size; px++) {
       let hit = 0;
       for (let sy = 0; sy < SUB; sy++) {
         for (let sx = 0; sx < SUB; sx++) {
-          const x = px + (sx + 0.5) / SUB - SIZE / 2;
-          const y = py + (sy + 0.5) / SUB - SIZE / 2;
+          const x = (px + (sx + 0.5) / SUB - size / 2) / scale;
+          const y = (py + (sy + 0.5) / SUB - size / 2) / scale;
           if (insideFlower(x, y)) hit++;
         }
       }
@@ -98,16 +104,19 @@ function pngChunk(type, data) {
 }
 
 function encodePng(rows) {
+  // The size comes from the pixel rows, not from the constant: the same encoder serves the
+  // 256px icon inside the .ico and the 512px PNG Linux asks for.
+  const size = rows.length;
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(SIZE, 0);
-  ihdr.writeUInt32BE(SIZE, 4);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
   ihdr[8] = 8; // bit depth
   ihdr[9] = 6; // color type: RGBA
   // compression (0), filter (0), interlace (0) are already zero.
 
-  const raw = Buffer.alloc(SIZE * (1 + SIZE * 4));
-  for (let y = 0; y < SIZE; y++) {
-    const o = y * (1 + SIZE * 4);
+  const raw = Buffer.alloc(size * (1 + size * 4));
+  for (let y = 0; y < size; y++) {
+    const o = y * (1 + size * 4);
     raw[o] = 0; // filter: none
     rows[y].copy(raw, o + 1);
   }
@@ -139,11 +148,19 @@ function encodeIco(png) {
 }
 
 // --- main -------------------------------------------------------------------
-const outPath = resolve(dirname(fileURLToPath(import.meta.url)), "..", "build", "icon.ico");
-const png = encodePng(rasterize());
-const ico = encodeIco(png);
-mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(outPath, ico);
-console.log(
-  `wrote ${outPath}: ${ico.length} bytes (PNG payload ${png.length} bytes), sha256 ${createHash("sha256").update(ico).digest("hex")}`,
-);
+const outDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "build");
+mkdirSync(outDir, { recursive: true });
+
+// Windows takes an .ico; Linux takes a PNG and refuses anything else — app-builder fails with
+// "unknown output format set" while converting an .ico for a Linux target, which is a confusing
+// way to say "wrong file". macOS takes an .icns, which this script does not produce.
+const icoPath = resolve(outDir, "icon.ico");
+const pngPath = resolve(outDir, "icon.png");
+const icoPng = encodePng(rasterize(SIZE));
+const ico = encodeIco(icoPng);
+writeFileSync(icoPath, ico);
+const png512 = encodePng(rasterize(512));
+writeFileSync(pngPath, png512);
+
+console.log(`wrote ${icoPath}: ${ico.length} bytes, sha256 ${createHash("sha256").update(ico).digest("hex")}`);
+console.log(`wrote ${pngPath}: ${png512.length} bytes, sha256 ${createHash("sha256").update(png512).digest("hex")}`);
