@@ -110,6 +110,48 @@ function HelpersSection({ activity }: { activity: AgentActivity }): React.JSX.El
   )
 }
 
+function IntegrationsSection({
+  integrations
+}: {
+  integrations: readonly { key: string; text: string }[]
+}): React.JSX.Element {
+  return (
+    <section>
+      <h2>
+        <b>▾ Integrations</b>
+        <span className="count">{integrations.length}</span>
+      </h2>
+      {integrations.map((entry) => (
+        <p key={entry.key}>
+          <span className="task">{entry.text}</span>
+        </p>
+      ))}
+    </section>
+  )
+}
+
+function ProfilesSection({
+  profiles
+}: {
+  profiles: readonly { name: string; agents: number }[]
+}): React.JSX.Element {
+  return (
+    <section>
+      <h2>
+        <b>▾ Profiles</b>
+        <span className="count">{profiles.length}</span>
+      </h2>
+      {profiles.map((profile) => (
+        <p key={profile.name}>
+          <span className="task">{profile.name}</span>
+          <span className="meta">{profile.agents} agents</span>
+        </p>
+      ))}
+      <p className="fold">and more: /gentle:profiles</p>
+    </section>
+  )
+}
+
 const PHASE_LABELS: Record<HostStatus['phase'], string> = {
   ready: 'ready',
   starting: 'starting…',
@@ -178,7 +220,7 @@ function StatusSection({
           </span>
         </p>
       ) : null}
-      {dirty && repo !== null ? <p className="fold">{repo.files.join(' · ')}</p> : null}
+      {/* Only the count: a list of paths is noise in a status panel. */}
     </section>
   )
 }
@@ -191,6 +233,8 @@ function StatusSection({
 export function Rail({
   tasks,
   activity,
+  integrations,
+  profiles,
   status,
   permissionMode,
   stats,
@@ -199,17 +243,21 @@ export function Rail({
 }: {
   tasks: readonly OddTaskFeature[]
   activity: AgentActivity
+  integrations: readonly { key: string; text: string }[]
+  profiles: readonly { name: string; agents: number }[]
   status: HostStatus
   permissionMode: AgentPermissionMode
   stats: SessionStats | null
   repo: RepoStatus | null
   sessionName: string | null
 }): React.JSX.Element {
-  const sections = visibleRailSections({ tasks, activity, repo, sessionName })
+  const sections = visibleRailSections({ tasks, activity, repo, sessionName, integrations, profiles })
   return (
     <aside className="rail" aria-label="Session rail">
       {sections.includes('tasks') ? <TasksSection tasks={tasks} /> : null}
       {sections.includes('helpers') ? <HelpersSection activity={activity} /> : null}
+      {sections.includes('integrations') ? <IntegrationsSection integrations={integrations} /> : null}
+      {sections.includes('profiles') ? <ProfilesSection profiles={profiles} /> : null}
       {sections.includes('status') ? (
         <StatusSection
           phase={status.phase}

@@ -40,7 +40,8 @@ export const IPC = {
   authEvent: 'auth:event',
   authAnswer: 'auth:answer',
   agentMode: 'agent:mode',
-  usageRead: 'usage:read'
+  usageRead: 'usage:read',
+  profilesRead: 'profiles:read'
 } as const
 
 export type HostPhase = 'starting' | 'ready' | 'restarting' | 'crashed' | 'stopped'
@@ -122,6 +123,13 @@ export interface SessionStats {
   tokens?: SessionUsageTotals
   cost?: SessionUsageTotals
   contextUsage?: SessionContextUsage | null
+}
+
+/** One agent model profile gentle-pi keeps on disk. */
+export interface ProfileSummary {
+  name: string
+  /** How many agents the profile sets a model for. */
+  agents: number
 }
 
 /** One metered model of a subscription, as the provider reports it. */
@@ -243,6 +251,9 @@ export interface GentleApi {
   }
   usage: {
     read: (providerId: string) => Promise<SubscriptionUsage | null>
+  }
+  profiles: {
+    read: () => Promise<ProfileSummary[]>
   }
   auth: {
     providers: () => Promise<ProviderChoice[]>

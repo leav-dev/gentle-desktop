@@ -4,6 +4,7 @@ import type {
   AgentPermissionMode,
   HostStatus,
   OddTaskFeature,
+  ProfileSummary,
   RepoStatus,
   SessionStats,
   SubscriptionUsage
@@ -37,6 +38,12 @@ function transcriptReducer(state: TranscriptState, action: TranscriptAction): Tr
     case 'hydrate':
       return hydrateTranscript(action.messages)
   }
+}
+
+/** One integration's reported status line. */
+export interface IntegrationStatus {
+  key: string
+  text: string
 }
 
 /** One extension notification, rendered as a toast by the shell. */
@@ -73,8 +80,10 @@ export interface EngineView {
   usage: SubscriptionUsage | null
   /** The latest extension notification, rendered as a toast. */
   notice: AgentNotice | null
-  /** The latest extension status line, shown beside the prompt rule. */
-  statusText: string | null
+  /** One row per extension that reported a status, keyed by its status key. */
+  integrations: IntegrationStatus[]
+  /** Agent model profiles found on disk, without a selection marker. */
+  profiles: ProfileSummary[]
   send: (message: string) => void
   dismissNotice: () => void
   switchSession: (sessionPath: string) => void
@@ -99,7 +108,8 @@ export function useEngine(): EngineView {
   const [repo, setRepo] = useState<RepoStatus | null>(null)
   const [stats, setStats] = useState<SessionStats | null>(null)
   const [notice, setNotice] = useState<AgentNotice | null>(null)
-  const [statusText, setStatusText] = useState<string | null>(null)
+  const [integrations, setIntegrations] = useState<IntegrationStatus[]>([])
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([])
   const [usage, setUsage] = useState<SubscriptionUsage | null>(null)
   const activeModel = useRef<{ provider: string; id: string } | null>(null)
   const notifySeq = useRef(0)
@@ -122,6 +132,7 @@ export function useEngine(): EngineView {
     const model = activeModel.current
     if (model !== null) {
       void window.gentle.usage.read(model.provider).then(setUsage).catch(() => {})
+    void window.gentle.profiles.read().then(setProfiles).catch(() => {})
     }
   }, [])
 
@@ -153,7 +164,14 @@ export function useEngine(): EngineView {
           tone: request.notifyType ?? 'info'
         })
       } else if (request.method === 'setStatus') {
-        setStatusText(request.statusText ?? null)
+        // Each status key is an integration reporting itself. An empty text clears that key,
+        // which is how an extension withdraws its line.
+        const key = request.statusKey
+        const text = request.statusText ?? ''
+        setIntegrations((current) => {
+          const others = current.filter((entry) => entry.key !== key)
+          return text.length === 0 ? others : [...others, { key, text }]
+        })
       }
     })
 
@@ -250,7 +268,8 @@ export function useEngine(): EngineView {
     permissionMode,
     usage,
     notice,
-    statusText,
+    integrations,
+    profiles,
     dismissNotice,
     sessionName: sessionState?.sessionName ?? null,
     sessionPath: sessionState?.sessionFile ?? null,

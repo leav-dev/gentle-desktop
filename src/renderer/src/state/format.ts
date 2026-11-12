@@ -77,7 +77,7 @@ export function historyShortcut(): string {
  * reserved by pi's editor. The app keeps `ctrl+p` as a convenience alias.
  */
 export function commandsShortcut(): string {
-  return isMac() ? '⌥K' : 'Alt+K'
+  return isMac() ? '⌘K' : 'Ctrl+K'
 }
 
 export function agentsShortcut(): string {
@@ -85,7 +85,7 @@ export function agentsShortcut(): string {
 }
 
 export function settingsShortcut(): string {
-  return isMac() ? '⌘K' : 'Ctrl+K'
+  return isMac() ? '⌘,' : 'Ctrl+,'
 }
 
 export function relativeTime(timestamp: string | null): string {

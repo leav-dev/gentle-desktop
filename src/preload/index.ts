@@ -11,6 +11,7 @@ import {
   type HostStatus,
   type OddTaskFeature,
   type PromptRequest,
+  type ProfileSummary,
   type ProviderChoice,
   type RepoStatus,
   type SessionStats,
@@ -58,6 +59,9 @@ const api: GentleApi = {
   usage: {
     read: (providerId: string) =>
       ipcRenderer.invoke(IPC.usageRead, providerId) as Promise<SubscriptionUsage | null>
+  },
+  profiles: {
+    read: () => ipcRenderer.invoke(IPC.profilesRead) as Promise<ProfileSummary[]>
   },
   auth: {
     providers: () => ipcRenderer.invoke(IPC.authProviders) as Promise<ProviderChoice[]>,

@@ -21,7 +21,6 @@ export function PromptPanel({
   disabled,
   streaming,
   mode,
-  statusText,
   onSend,
   onAbort,
   onSlashTrigger
@@ -30,8 +29,6 @@ export function PromptPanel({
   streaming: boolean
   /** The agent's permission mode; only the unguarded ones are worth surfacing. */
   mode: AgentPermissionMode
-  /** The latest extension status line, when one is active. */
-  statusText: string | null
   onSend: (message: string) => void
   onAbort: () => void
   /**
@@ -91,7 +88,6 @@ export function PromptPanel({
         <span className="petal">✿</span>
         <span>{stateLabel}</span>
         {modeLabel ? <span className="mode-badge">{modeLabel}</span> : null}
-        {statusText !== null ? <span className="prompt-status">{statusText}</span> : null}
         {/* The action row owns the accelerators; repeating one here is noise. */}
         <span className="prompt-rule-right">{streaming ? 'esc · stop' : ''}</span>
       </div>

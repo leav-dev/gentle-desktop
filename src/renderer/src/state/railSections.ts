@@ -13,13 +13,16 @@ import type { AgentActivity } from './agentActivity.ts'
  * allowed to do, and which session is this" has an answer at all times. An empty Status
  * section is a defect, not a state.
  */
-export type RailSectionId = 'tasks' | 'helpers' | 'status'
+export type RailSectionId = 'tasks' | 'helpers' | 'integrations' | 'profiles' | 'status'
 
 export interface RailData {
   tasks: readonly OddTaskFeature[]
   activity: AgentActivity
   repo: RepoStatus | null
   sessionName: string | null
+  /** Optional so existing callers keep compiling; an absent list means no section. */
+  integrations?: readonly { key: string; text: string }[]
+  profiles?: readonly { name: string; agents: number }[]
 }
 
 export function helpersHaveActivity(activity: AgentActivity): boolean {
@@ -31,6 +34,8 @@ export function visibleRailSections(data: RailData): RailSectionId[] {
   const sections: RailSectionId[] = []
   if (data.tasks.length > 0) sections.push('tasks')
   if (helpersHaveActivity(data.activity)) sections.push('helpers')
+  if ((data.integrations?.length ?? 0) > 0) sections.push('integrations')
+  if ((data.profiles?.length ?? 0) > 0) sections.push('profiles')
   // Always last, always present: it is the rail's anchor.
   sections.push('status')
   return sections

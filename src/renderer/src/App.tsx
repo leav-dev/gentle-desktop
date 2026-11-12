@@ -109,7 +109,16 @@ export function App(): React.JSX.Element {
 
       if (!(event.metaKey || event.ctrlKey)) return
 
-      if (key === 'k' || key === ',') {
+      if (key === 'k') {
+        event.preventDefault()
+        setHistoryOpen(false)
+        setWizardOpen(false)
+        setPaletteSeed('')
+        setPaletteOpen((open) => !open)
+        return
+      }
+
+      if (key === ',') {
         event.preventDefault()
         setPaletteOpen(false)
         setHistoryOpen(false)
@@ -205,7 +214,6 @@ export function App(): React.JSX.Element {
             disabled={!engine.ready}
             streaming={engine.streaming}
             mode={engine.permissionMode}
-            statusText={engine.statusText}
             onSend={engine.send}
             onAbort={engine.abort}
             onSlashTrigger={openPaletteFromSlash}
@@ -215,6 +223,8 @@ export function App(): React.JSX.Element {
           <Rail
           tasks={engine.oddTasks}
           activity={engine.activity}
+          integrations={engine.integrations}
+          profiles={engine.profiles}
           status={engine.status}
           permissionMode={engine.permissionMode}
           stats={engine.stats}
@@ -226,6 +236,8 @@ export function App(): React.JSX.Element {
             <Rail
               tasks={engine.oddTasks}
               activity={engine.activity}
+              integrations={engine.integrations}
+              profiles={engine.profiles}
               status={engine.status}
               permissionMode={engine.permissionMode}
               stats={engine.stats}

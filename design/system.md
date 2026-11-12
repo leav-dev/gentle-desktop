@@ -69,10 +69,12 @@ and the brand petal. Dim is metadata only.
   they live on the action row, and an accelerator is never advertised twice.
   Everything the window needs to state lives here and nowhere else; nothing is repeated in
   the rail or the prompt rule.
-- **Key map** — `Ctrl+K`/`⌘K` settings, `Alt+K`/`⌥K` commands, `Ctrl+H`/`⌘H` history,
-  `Alt+A`/`⌥A` agents, `Ctrl+P`/`⌘P` kept as an alias for commands. Commands follow the
-  terminal, which opens its command menu with `alt+k` because pi reserves `ctrl+k` for the
-  editor; this app has no such editor, so `ctrl+k` follows the habit users arrive with.
+- **Key map** — `Ctrl+K`/`⌘K` commands, `Ctrl+H`/`⌘H` history, `Alt+A`/`⌥A` agents,
+  `Ctrl+,`/`⌘,` providers. `Alt+K` and `Ctrl+P` stay as aliases for commands.
+- **There is no settings window.** Configuration *is* the command surface: the terminal's
+  command menu groups Configuration, Session, Diagnostics and Skills, and every one of those
+  is an engine command. A separate settings dialog would fork a surface the engine already
+  owns, so the palette is where configuration lives.
 - **Action row** — a labelled button row directly under the top bar for every overlay and
   session action: New, History, Commands, Agents, Providers, and Show rail when it is
   folded. Each button carries its accelerator in dim text beside the label. This row is not
@@ -86,6 +88,12 @@ and the brand petal. Dim is metadata only.
 - **Rail sections** — `▾ NAME` + count. The set is predefined and the order is fixed:
   Tasks → Jobs → Helpers → Session. Section headers are not buttons; the whole section is
   scannable.
+- **Changes show a count, never a list.** The Status section states how many files changed
+  and the line deltas; individual paths are noise in a status panel and belong to a
+  dedicated view, not the chrome.
+- **Rail order** — Tasks → Helpers → Integrations → Profiles → Status. Integrations lists
+  one row per extension that reported a status key; Profiles lists the agent model profiles
+  found on disk with how many agents each configures.
 - **Status is always visible.** It is the rail's only permanent section: engine health,
   permission mode, the session identity with its message count, and the working-tree
   changes. These are questions that have an answer at all times, so an empty Status section
