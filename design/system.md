@@ -55,6 +55,25 @@ and the brand petal. Dim is metadata only.
   rail and 3-column gap; it collapses below `140ch` of available width, exactly like the
   terminal's `SIDEBAR_BREAKPOINT = 140`.
 
+## Conversation rendering
+
+The transcript mirrors the terminal, which is the reason this section exists: without it,
+each attempt reinvented the styling.
+
+- **Everything is monospaced**, including assistant prose. There is no sans stack in the
+  transcript; the sans line in Typography is for docs, not chat.
+- **Assistant text is plain text**: no bubble, no border, no card, no avatar. It fills the
+  conversation column.
+- **User messages** are a `--user-bg` block with `› ` in `--accent` as their prefix, and the
+  text is preserved verbatim with `white-space: pre-wrap`.
+- **Thinking** is text in `--soft-rose` with no rule or frame; only the disclosure summary is
+  `--dim`. Streaming markers use `▍` in `--accent`.
+- **Tool calls** are framed cards: title in `--champagne`, status or elapsed time at the
+  right of the header, body on `--tool-ok-bg` and `--tool-error-bg` when failed. A failed
+  call turns the frame and the body, never the whole transcript.
+- **Diffs** color additions `--success`, removals `--error`, and context `--dim`. Nothing
+  else about a diff is colored.
+
 ## Component rules
 
 - **Prompt panel** — the only place the petal appears: `✿` plus a state label (`exploring…`,

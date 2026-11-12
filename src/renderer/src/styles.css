@@ -288,7 +288,9 @@ body {
 }
 
 .message {
-  max-width: 80ch;
+  /* The terminal's transcript fills its column and never wraps prose in a narrower
+     measure: the rail already bounds the reading width. */
+  max-width: none;
 }
 
 .message-user {
@@ -331,20 +333,21 @@ body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.55;
-  font-family: ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 13.5px;
 }
 
 .message-thinking {
   color: var(--soft-rose);
-  border-left: 2px solid var(--border-subtle);
-  padding-left: 10px;
   font-size: 12px;
+  /* No rule or frame: the terminal marks thinking by color and indentation only. */
+  padding-left: 2px;
 }
 
 .message-thinking-summary {
   cursor: pointer;
   user-select: none;
+  color: var(--dim);
 }
 
 .message-thinking .message-text {
