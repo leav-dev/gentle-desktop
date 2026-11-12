@@ -23,12 +23,15 @@ export function StatusBar({
   status,
   sessionName,
   model,
-  notice
+  notice,
+  onOpenSetup
 }: {
   status: HostStatus
   sessionName: string | null
   model: unknown
   notice: ExtensionUiRequest | null
+  /** Persistent entry point to the provider setup window. */
+  onOpenSetup: () => void
 }): React.JSX.Element {
   const label = modelLabel(model)
   const text = noticeText(notice) ?? status.detail
@@ -39,6 +42,9 @@ export function StatusBar({
       {label !== null ? <span className="status-model">{label}</span> : null}
       {status.restarts > 0 ? <span className="status-restarts">{status.restarts} restarts</span> : null}
       {text !== undefined && text.length > 0 ? <span className="status-notice">{text}</span> : null}
+      <button type="button" className="status-bar-setup" onClick={onOpenSetup}>
+        Providers
+      </button>
     </header>
   )
 }
