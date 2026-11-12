@@ -3,13 +3,13 @@
   "chosen": "01-terminal-faithful.html",
   "handoffs": {
     "01-terminal-faithful.html": {
-      "status": "in_progress",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-12T01:59:32.476Z",
       "startedAt": "2026-11-12T01:59:42.574Z",
-      "implementedAt": null,
+      "implementedAt": "2026-11-12T02:35:46.466Z",
       "feature": "odd/tasks/gentle-desktop.md",
-      "note": "Implementing T19/T20: terminal shell (header row, transcript + 50ch rail, petal prompt, status bar) in the Gentleman-Cute palette, with empty rail sections hidden and context/cost in the top bar."
+      "note": "Implemented in d3faf02: header row (model, ctx gauge, cost), transcript + fixed 50ch rail collapsing below 140 columns, petal prompt panel, status bar, and history picker on ⌘K. Rail sections are fed by real sources and empty ones are not rendered. Verified: 67 tests, typecheck, build, and the packaged app runs with the engine child alive. No previewUrl: this is an Electron window with no loopback URL."
     }
   }
 }

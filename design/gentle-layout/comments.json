@@ -22,6 +22,17 @@
       "status": "resolved",
       "sentAt": "2026-11-12T01:54:03.091Z",
       "resolvedAt": "2026-11-12T01:58:38.721Z"
+    },
+    {
+      "id": "uy0bm1j4",
+      "file": "01-terminal-faithful.html",
+      "selector": "body > footer > span:nth-of-type(3)",
+      "excerpt": "🔥 YOLO",
+      "comment": "esto debe de ir junto al estado del agene",
+      "createdAt": "2026-11-12T02:33:01.432Z",
+      "status": "open",
+      "sentAt": "2026-11-12T02:33:01.485Z",
+      "resolvedAt": null
     }
   ]
 }

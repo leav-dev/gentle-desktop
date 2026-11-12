@@ -123,6 +123,12 @@ T8. Packaging: installers for Windows and macOS, MIT license and attribution, RE
   disabled → `{configured:false}`, default → `{configured:true, source:"stored"}` in 11 ms
   with `allowModelNetwork: false`. Left unfixed it would reopen the setup window on every
   launch after a successful sign-in.
+- E14 Two packaged builds started and exited with code 1 printing nothing, and the cause was
+  not the code: the asar was corrupt, so the app entry was unreadable and Electron quit
+  before creating its user data directory. `scripts/verify-package.mjs` passed anyway,
+  because it checked bundled files and never the `main` the packaged manifest declares. It
+  now reads that entry from the archive and extracts it, and a clean rebuild passes.
+  Lesson: verify the artifact you are about to run, not the files you expect inside it.
 - E13 The delivered git porcelain parsing was wrong in two ways, and neither showed up in
   the handoff summary: it split renames on numstat's ` => ` arrow instead of porcelain's
   ` -> `, and then advanced the index by one for a continuation record that porcelain v1
