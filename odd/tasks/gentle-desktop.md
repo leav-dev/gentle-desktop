@@ -50,6 +50,16 @@ S10. The app honours the provider configuration gentle-shell already has, includ
     la idea es tratar de manetener lo mas posible de el, y genlte-shell tie configurado
     otros provedores de los que me esta mostrando la app".
 
+S11. The layout mirrors the Gentle Shell terminal: header row, transcript, a fixed 50-column
+    rail ordered Tasks → Jobs → Helpers → Session, a petal prompt panel and one full-width
+    status bar; the rail collapses below 140 columns. The palette is the one Gentle Shell
+    gives a new user (Gentleman-Cute). Chosen direction: artboard
+    `design/gentle-layout/01-terminal-faithful.html`.
+
+S12. There is no permanent conversation list. Saved conversations are reached through a
+    picker opened on demand, as in the terminal. User's words: "no me gusta tener un
+    listado de las deams conversaiones".
+
 S7. The engine is consumed, not copied: the app launches the published `pi` runtime with
     gentle-pi's extensions enabled and `GENTLE_SHELL_INTERACTIVE_HOST=1`, so upstream
     engine fixes remain reachable. Engine code is vendored only for a patch that cannot
@@ -77,6 +87,10 @@ T9. [x] First-run setup: detect an already configured provider with the non-inte
     with no visible terminal. — S8, S9
 T12. [x] Offer every provider the running engine reports, not only those with a login
     flow, and let a ready provider be chosen by picking one of its models. — S10
+T19. Rebuild the window shell as the terminal layout: header row, transcript, 50-column rail
+    with real data (agent activity, session stats, repository changes, ODD tasks), petal
+    prompt panel and the status bar, in the Gentleman-Cute palette. — S11
+T20. Replace the session sidebar with a history picker opened on demand. — S12
 T13. Support providers that need a custom base URL by writing pi's own configuration,
     instead of asking the user to edit files. — S10
 T10. Distribution: installers a non-technical person can run, plus a short first-run guide
@@ -184,6 +198,16 @@ L12. User feedback, verbatim: "no estoy logrando navegar en la conversacion, no 
     fixed (a flex child that could not shrink, plus auto-scroll that yanked the reader back),
     and the layout is designed in `design/gentle-layout/` with two directions that follow the
     terminal's structure and its Gentleman-Cute palette.
+
+L13. Decision: implement artboard 01 (terminal faithful) and adopt the Gentleman-Cute
+    palette, over the one-column alternative and over keeping the current blue accent.
+
+L14. Design handoff: `design/gentle-layout/01-terminal-faithful.html` is the chosen artboard
+    for T19/T20; `02-one-column-work-rows.html` stays as an alternative and is not being
+    implemented. The artboard is the visual spec, not code to copy: colors, type, spacing
+    and radius come from `design/system.md`. Two rules from the canvas apply to the build:
+    a rail section with nothing to show is not rendered at all, and context usage plus cost
+    live in the top bar only.
 
 L6. Evidence: gentle-pi `lib/rpc-host.ts` already defines the desktop contract
     (`GENTLE_SHELL_INTERACTIVE_HOST=1` on a `pi --mode rpc` process), documented in

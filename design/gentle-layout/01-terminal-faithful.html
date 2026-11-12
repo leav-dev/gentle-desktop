@@ -54,6 +54,8 @@
       .path { color: var(--muted); }
       header .right { margin-left: auto; display: flex; gap: 12px; color: var(--dim); }
       header .right b { color: var(--powder-blue); font-weight: 500; }
+      header .right .model { color: var(--powder-blue); }
+      header .right .cost { color: var(--text); font-variant-numeric: tabular-nums; }
       .picker-key {
         border: 1px solid var(--border-subtle);
         border-radius: 4px;
@@ -210,8 +212,9 @@
       <span class="path">~/codes/priv/gentle_ia_desktop</span>
       <span class="right">
         <span class="picker-key">⌘K history</span>
-        <span>deepseek-v4-flash</span>
-        <span>12 tasks · 6 done</span>
+        <span class="model">deepseek-v4-flash · medium</span>
+        <span class="ctx">ctx <span class="gauge">▰▰▰▰▱▱▱▱</span> 45%</span>
+        <span class="cost">$0.42</span>
       </span>
     </header>
 
@@ -258,17 +261,19 @@
         </div>
       </div>
 
+      <!--
+        The rail is a predefined set of sections, always in this order:
+        TASKS → JOBS → HELPERS → SESSION.
+        A section with nothing to show is not rendered at all — no empty panel, no
+        placeholder row, no zero count. This artboard has no background job, so there is no
+        JOBS section between TASKS and HELPERS.
+      -->
       <aside class="rail">
         <section>
           <h2><b>▾ TASKS</b><span>2/6</span></h2>
           <p><span class="task"><span class="run">◐</span> Fold the rail at 140 cols</span><span class="meta">12m</span></p>
           <p><span class="task">○ Fix transcript scroll</span><span class="meta">pending</span></p>
           <p><span class="task ok">✓ 4 done</span><span class="meta"></span></p>
-        </section>
-
-        <section>
-          <h2><b>▾ JOBS</b><span>1</span></h2>
-          <p><span class="task"><span class="run">◐</span> pnpm dist</span><span class="meta">⧗ 0:48</span></p>
         </section>
 
         <section>
@@ -279,8 +284,7 @@
 
         <section>
           <h2><b>▾ SESSION</b><span>review</span></h2>
-          <p><span class="task">✎ <span class="add">+42</span> <span class="del">−7</span> · 3 files</span><span class="meta">clean</span></p>
-          <p><span class="task">ctx <span class="gauge">▰▰▰▰▱▱▱▱</span> 45%</span><span class="meta">$0.42</span></p>
+          <p><span class="task">✎ <span class="add">+42</span> <span class="del">−7</span> · 3 files</span><span class="meta">dirty</span></p>
           <p class="fold">⌥⏎ opens the review gate</p>
         </section>
       </aside>
@@ -292,10 +296,6 @@
       <span class="badge">🔥 YOLO</span>
       <span class="sep">│</span>
       <span><b>deepseek-v4-flash</b> · medium</span>
-      <span class="sep">│</span>
-      <span>ctx <span class="gauge">▰▰▰▰▱▱▱▱</span> 45%</span>
-      <span class="sep">│</span>
-      <span>$0.42</span>
       <span class="sep">│</span>
       <span>2 tasks · 1 helper</span>
       <span class="grow"></span>

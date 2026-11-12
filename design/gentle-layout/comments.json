@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "jzxrw77l",
+      "file": "01-terminal-faithful.html",
+      "selector": "body > main > aside",
+      "excerpt": "▾ TASKS 2/6 ◐ Fold the rail at 140 cols 12m ○ Fix transcript scroll pending ✓ 4 done ▾ JOBS 1 ◐ pnpm dist ⧗ 0:48 ▾ HELPERS 1 running · 1 waiting ◐ map footer data sources explore · 12.4k ? approve: write styles.css needs you ▾ SESSION review ✎ +42 −7 · 3 files clean ctx ▰▰▰▰▱▱▱▱ 45% $0.42 ⌥⏎ opens t",
+      "comment": "sementa esto en secciones predefinidas, si una seccio no se usa no se quiere mostrar",
+      "createdAt": "2026-11-12T01:52:54.818Z",
+      "status": "resolved",
+      "sentAt": "2026-11-12T01:52:54.880Z",
+      "resolvedAt": "2026-11-12T01:57:47.950Z"
+    },
+    {
+      "id": "i4ls571e",
+      "file": "01-terminal-faithful.html",
+      "selector": "body > main > aside > section:nth-of-type(4) > p:nth-of-type(2)",
+      "excerpt": "ctx ▰▰▰▰▱▱▱▱ 45% $0.42",
+      "comment": "esto debe de ir en la barra superior",
+      "createdAt": "2026-11-12T01:54:02.995Z",
+      "status": "resolved",
+      "sentAt": "2026-11-12T01:54:03.091Z",
+      "resolvedAt": "2026-11-12T01:58:38.721Z"
+    }
+  ]
+}

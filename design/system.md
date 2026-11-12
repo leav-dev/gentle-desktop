@@ -60,10 +60,17 @@ and the brand petal. Dim is metadata only.
 - **Prompt panel** — the only place the petal appears: `✿` plus a state label (`exploring…`,
   `waiting for input`), a rule above the field, and the input prefixed with `› `. Never a
   boxed chat input.
+- **Top bar** — brand, working directory, and on the right: the history affordance, model
+  with effort, context usage gauge with percent, and cost. Context usage and cost live here
+  and nowhere else; they are never repeated in the rail or the status bar.
 - **Status bar** — one row, segments separated by `│`: branch with `±N`, mode badge, model
-  and effort, context gauge, cost. Segments drop from the right when space runs out.
-- **Rail sections** — `▾ NAME` + count. Order is fixed: Tasks, Jobs, Helpers, then session
-  status. Section headers are not buttons; the whole section is scannable.
+  and effort, work counts, hints. Segments drop from the right when space runs out.
+- **Rail sections** — `▾ NAME` + count. The set is predefined and the order is fixed:
+  Tasks → Jobs → Helpers → Session. Section headers are not buttons; the whole section is
+  scannable.
+- **An unused rail section is not rendered at all** — no empty panel, no placeholder row, no
+  zero count. A window with no background job shows Tasks, Helpers and Session, and nothing
+  where Jobs would be; the remaining sections do not renumber or change appearance.
 - **Tool card** — bordered, title in `--champagne`, status glyph, elapsed time at the right
   of the top rule. Failures switch the body to `--tool-error-bg`.
 - **Session history is not a permanent list** — it is a picker opened on demand, as in the
