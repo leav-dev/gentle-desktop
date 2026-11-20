@@ -37,6 +37,8 @@ import { collectRepoStatus, emptyRepoStatus } from './repo.ts'
 import { readPermissionMode, resolveConfigHome } from './permission-mode.ts'
 import { readProfiles, resolveActiveProfile } from './profiles.ts'
 import { readSubscriptionUsage } from './subscription-usage.ts'
+import { ensureAgentSettingsForDesktop } from './agent-settings.ts'
+import { resolveAgentHome } from './rpc/launch.ts'
 import { PiHost } from './rpc/host.ts'
 import { listSessions } from './sessions.ts'
 import {
@@ -56,6 +58,20 @@ let authBridge: AuthPromptBridge | null = null
  * folder like `win-unpacked`. In dev the working directory is the application's own tree.
  */
 const APP_DIRECTORY = applicationDirectory(app.getPath('exe'), app.isPackaged, process.cwd())
+
+// Installed and portable builds share userData and the agent home; two processes fight over
+// the same engine and Gentle Agents session locks on Windows.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    const windows = BrowserWindow.getAllWindows()
+    if (windows.length === 0) return
+    const window = windows[0]
+    if (window.isMinimized()) window.restore()
+    window.focus()
+  })
+}
 
 /** The app's own state directory — where the chosen folder is remembered, never in a repo. */
 function stateDir(): string {
@@ -487,6 +503,14 @@ app.whenReady().then(async () => {
     }
   })
   if (startFolder.remember) rememberWorkspace(startFolder.folder)
+
+  try {
+    ensureAgentSettingsForDesktop(resolveAgentHome())
+  } catch (error) {
+    process.stderr.write(
+      `[agent] cannot prepare settings.json: ${error instanceof Error ? error.message : String(error)}\n`
+    )
+  }
 
   // The engine starts before the window exists, so the window's first questions always
   // reach a child instead of a stopped host — a window that mounts first logs failed

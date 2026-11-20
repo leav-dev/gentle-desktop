@@ -1,0 +1,21 @@
+diff --git a/lib/windows-session-transport.ts b/lib/windows-session-transport.ts
+index 806525d9ac61ea2d6f0f1d738437b438a867abef..b710c3f0382ff7e0976724818a21981172b587b4 100644
+--- a/lib/windows-session-transport.ts
++++ b/lib/windows-session-transport.ts
+@@ -1,4 +1,5 @@
+ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
++import { tmpdir } from "node:os";
+ import { createConnection, type Socket } from "node:net";
+ import { fileURLToPath } from "node:url";
+ import {
+@@ -328,7 +329,9 @@ export class WindowsSessionTransportHost {
+ 		if (this.started) return this.started;
+ 		if (this.stopped) return Promise.reject(transportError("Windows transport host exited", "stopped"));
+ 		try {
+-			this.child = this.spawnProcess(FIXED_WINDOWS_POWERSHELL, ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", this.runtimeScript], { shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] }) as SpawnedHost;
++			// Host cwd can be a dev tree with heavy node_modules; inheriting it broke the
++			// helper JSON protocol on Windows when Gentle Agents restarts session transport.
++			this.child = this.spawnProcess(FIXED_WINDOWS_POWERSHELL, ["-NoLogo", "-NoProfile", "-NonInteractive", "-File", this.runtimeScript], { shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"], cwd: tmpdir() }) as SpawnedHost;
+ 		} catch { return Promise.reject(transportError("Windows transport host unavailable", "spawn")); }
+ 		this.child.stdout.on("data", this.onStdoutData);
+ 		this.child.stdout.on("error", this.onStdoutError);

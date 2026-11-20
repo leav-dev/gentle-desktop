@@ -12,13 +12,16 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "dist": "pnpm build && electron-builder",
     "dist:installer": "pnpm build && electron-builder --win nsis",
+    "dist:portable": "pnpm build && electron-builder --win zip",
     "test": "node --test tests/*.test.mts",
     "test:unit": "node --test tests/launch.test.mts",
-    "test:engine": "node --test tests/engine.test.mts"
+    "test:engine": "node --test tests/engine.test.mts",
+    "postinstall": "node node_modules/electron/install.js"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.5.2",
     "@earendil-works/pi-coding-agent": "^1.5.2",
+    "@heyhuynhgiabuu/pi-pretty": "0.6.27",
     "gentle-pi": "^4.7.0"
   },
   "devDependencies": {

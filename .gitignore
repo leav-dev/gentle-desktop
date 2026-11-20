@@ -1,7 +1,10 @@
 node_modules/
 out/
 dist/
+# Packaged installers and unpacked builds (pnpm dist / dist:installer)
 release/
+# Local agent harness metadata (not part of the app)
+.atl/
 *.log
 .DS_Store
 .env

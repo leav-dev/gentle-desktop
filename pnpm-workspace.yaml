@@ -10,3 +10,5 @@ onlyBuiltDependencies:
   - esbuild
   - gentle-pi
   - protobufjs
+patchedDependencies:
+  gentle-pi@4.7.0: patches/gentle-pi@4.7.0.patch

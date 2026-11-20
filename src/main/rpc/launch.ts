@@ -55,6 +55,14 @@ function moduleBaseOrDefault(moduleBase?: string): string {
  * only, so `require.resolve` fails even though the package is installed. A filesystem walk
  * is also what works inside `app.asar`, where Electron patches `fs` but not everything.
  */
+/** Packaged builds keep extension trees in `app.asar.unpacked`; prefer that over the asar copy. */
+function resolveUnpackedDependencyRoot(specifier: string): string | null {
+  const resources = process.resourcesPath
+  if (typeof resources !== 'string' || resources.length === 0) return null
+  const root = join(resources, 'app.asar.unpacked', 'node_modules', ...specifier.split('/'))
+  return existsSync(join(root, 'package.json')) ? root : null
+}
+
 function locatePackage(specifier: string, moduleBase: string): string {
   let current = moduleBase
   for (;;) {
@@ -97,6 +105,8 @@ export function resolvePiEntry(moduleBase?: string): string {
 export function resolveGentlePiRoot(moduleBase?: string): string {
   const override = process.env['GENTLE_DESKTOP_GENTLE_PI_ROOT']
   if (override) return resolve(override)
+  const unpacked = resolveUnpackedDependencyRoot(GENTLE_PI_PACKAGE)
+  if (unpacked) return unpacked
   return locatePackage(GENTLE_PI_PACKAGE, moduleBaseOrDefault(moduleBase))
 }
 

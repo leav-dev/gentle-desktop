@@ -51,7 +51,9 @@ if (!existsSync(asarPath)) {
     ['preload bundle', 'out/preload/index.js'],
     ['renderer bundle', 'out/renderer/index.html'],
     ['pi engine entry', 'pi-coding-agent/dist/bundle/cli.js'],
-    ['gentle-pi extensions', 'gentle-pi/extensions/gentle-shell.ts']
+    ['gentle-pi extensions', 'gentle-pi/extensions/gentle-shell.ts'],
+    // gentle-pi loads this from pi-pretty.ts; electron-builder does not hoist transitive deps.
+    ['pi-pretty runtime', '@heyhuynhgiabuu/pi-pretty/package.json']
   ]
 
   for (const [label, needle] of checks) {
